@@ -1,0 +1,64 @@
+{
+  "name": "puzzle_3x4_seed13",
+  "grid_shape": [
+    3,
+    4
+  ],
+  "n_pieces": 12,
+  "timings": {
+    "enhancement": 0.3869154999847524,
+    "segmentation": 0.5920005999796558,
+    "contours": 0.07487360000959598,
+    "description": 0.33850680000614375,
+    "matching": 0.007178800005931407,
+    "assembly": 0.006560699985129759,
+    "rendering": 1.5167700999882072,
+    "total": 2.9230574000102933
+  },
+  "seam": {
+    "n_seams": 17,
+    "n_illegal_seams": 0,
+    "mean_seam_cost": 0.09818874048565958,
+    "median_seam_cost": 0.08999857796425116,
+    "max_seam_cost": 0.16057389779792425,
+    "random_baseline_cost": 0.22722678850893518,
+    "quality": 0.5678821976494266,
+    "n_forced_placements": 0,
+    "complete": true
+  },
+  "matching": {
+    "n_true_seams": 34,
+    "top1_accuracy": 0.9705882352941176,
+    "top3_accuracy": 1.0,
+    "mean_rank": 0.029411764705882353
+  },
+  "placement": {
+    "position_accuracy": 1.0,
+    "position_and_rotation_accuracy": 1.0,
+    "global_rotation": 2
+  },
+  "neighbour": {
+    "neighbour_accuracy": 1.0,
+    "n_true_adjacencies": 17,
+    "n_recovered": 17
+  },
+  "rotation": {
+    "rotation_accuracy": 1.0,
+    "n_pieces": 12,
+    "orientation_histogram": {
+      "0": 0,
+      "1": 0,
+      "2": 12,
+      "3": 0
+    }
+  },
+  "image": {
+    "mse": 0.002280477331194963,
+    "psnr_db": 26.41974240452585,
+    "ssim": 0.7983459076676919,
+    "global_rotation": 2
+  },
+  "notes": [
+    "12 raw components, 12 kept, 0 blob(s) split into touching pieces, 12 pieces"
+  ]
+}

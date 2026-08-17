@@ -1,0 +1,58 @@
+{
+  "gaussian_1.5": {
+    "mse": 0.0025582942763664176,
+    "psnr_db": 25.920495008067995,
+    "ssim": 0.7409447053738677,
+    "global_rotation": 0
+  },
+  "gaussian_2.5": {
+    "mse": 0.004158287615322091,
+    "psnr_db": 23.81085475219222,
+    "ssim": 0.7720721729146076,
+    "global_rotation": 0
+  },
+  "median_3": {
+    "mse": 0.0007616299111199805,
+    "psnr_db": 31.18256008453319,
+    "ssim": 0.8635132547512582,
+    "global_rotation": 0
+  },
+  "median_5": {
+    "mse": 0.0008997346022511676,
+    "psnr_db": 30.45885576977993,
+    "ssim": 0.9106672539093293,
+    "global_rotation": 0
+  },
+  "no_filtering": {
+    "mse": 0.017960642850331547,
+    "psnr_db": 17.456781230498237,
+    "ssim": 0.32524535001498733,
+    "global_rotation": 0
+  },
+  "contrast": {
+    "photograph": {
+      "entropy_bits": {
+        "original": 5.349532443923007,
+        "equalised": 5.111104075660332,
+        "stretched": 5.604542669283815
+      },
+      "intensity_std": {
+        "original": 0.24470220736353984,
+        "equalised": 0.2718413959570032,
+        "stretched": 0.34590806070458546
+      }
+    },
+    "low_contrast_patch": {
+      "entropy_bits": {
+        "original": 2.3858333221163606,
+        "equalised": 2.387335255792216,
+        "stretched": 5.567429598499472
+      },
+      "intensity_std": {
+        "original": 0.022023198662718575,
+        "equalised": 0.1418849369583337,
+        "stretched": 0.3494760307800689
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+# CSE480 Machine Vision -- Milestones 1 and 2
+#
+# MILESTONE 1 depends on NumPy only.  Every filter, threshold, edge detector,
+# morphological operator, connected-component labeller, contour tracer,
+# descriptor, matcher and search in src/ (outside src/ml/) is implemented from
+# scratch on top of plain array arithmetic.
+#
+#   Pillow      -- decoding and encoding JPEG/PNG files in main.py
+#   matplotlib  -- figures in notebooks/demonstration.ipynb
+#   reportlab   -- rendering report/*.pdf from the Markdown sources
+#   pytest      -- optional; tests/run_tests.py runs the suite without it
+
+numpy>=1.24
+Pillow>=9.0
+matplotlib>=3.5
+reportlab>=4.0
+pytest>=7.0
+
+# MILESTONE 2 additionally needs a deep-learning framework for the two models
+# in src/ml/.  CPU builds are sufficient; the models are small (~0.35 M and
+# ~0.10 M parameters) and train in minutes on a laptop CPU.
+#
+#   torch            -- both models
+#   torch-geometric  -- GraphSAGE layers for the graph network.  Optional:
+#                       src/ml/gnn.py falls back to an equivalent mean-
+#                       aggregation convolution written in plain torch if it
+#                       is not installed.
+#   scikit-learn     -- only used by the tests, to cross-check the from-scratch
+#                       ROC-AUC implementation
+#
+# CPU install:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+torch>=2.0
+torch-geometric>=2.4
+scikit-learn>=1.2

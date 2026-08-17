@@ -1,0 +1,37 @@
+{
+  "name": "dataset_0718-17_Color_png.rf",
+  "grid_shape": [
+    5,
+    7
+  ],
+  "n_pieces": 33,
+  "timings": {
+    "enhancement": 2.4394960000063293,
+    "segmentation": 8.678933600021992,
+    "contours": 0.23872639998444356,
+    "description": 1.6473190000106115,
+    "matching": 0.02999500001897104,
+    "assembly": 0.12181460001738742,
+    "rendering": 10.952606700011529,
+    "total": 24.109366599994246
+  },
+  "seam": {
+    "n_seams": 50,
+    "n_illegal_seams": 6,
+    "mean_seam_cost": 1.2084917212123452,
+    "median_seam_cost": 1.2291944339299548,
+    "max_seam_cost": 1.7292210647310111,
+    "random_baseline_cost": 1.398228720451486,
+    "quality": 0.13569811323706404,
+    "n_forced_placements": 3,
+    "complete": false
+  },
+  "matching": {},
+  "placement": {},
+  "neighbour": {},
+  "rotation": {},
+  "image": {},
+  "notes": [
+    "63 raw components, 33 kept, 3 blob(s) split into touching pieces, 33 pieces"
+  ]
+}

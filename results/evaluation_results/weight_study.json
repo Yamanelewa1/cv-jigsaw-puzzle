@@ -1,0 +1,88 @@
+{
+  "puzzles": [
+    [
+      3,
+      4,
+      12,
+      true
+    ],
+    [
+      4,
+      5,
+      14,
+      true
+    ],
+    [
+      5,
+      7,
+      16,
+      true
+    ]
+  ],
+  "results": [
+    {
+      "w_shape": 1.0,
+      "w_colour": 0.0,
+      "w_length": 0.0,
+      "top1": 0.07759165957818055,
+      "neighbour": 0.4825732295142751,
+      "position": 0.4761904761904762
+    },
+    {
+      "w_shape": 0.0,
+      "w_colour": 1.0,
+      "w_length": 0.0,
+      "top1": 0.909801740495976,
+      "neighbour": 1.0,
+      "position": 1.0
+    },
+    {
+      "w_shape": 1.0,
+      "w_colour": 1.0,
+      "w_length": 0.0,
+      "top1": 0.9197419791053241,
+      "neighbour": 1.0,
+      "position": 1.0
+    },
+    {
+      "w_shape": 1.0,
+      "w_colour": 1.0,
+      "w_length": 0.5,
+      "top1": 0.9197419791053241,
+      "neighbour": 1.0,
+      "position": 1.0
+    },
+    {
+      "w_shape": 2.0,
+      "w_colour": 1.0,
+      "w_length": 0.5,
+      "top1": 0.9124408384043273,
+      "neighbour": 1.0,
+      "position": 1.0
+    },
+    {
+      "w_shape": 1.0,
+      "w_colour": 2.0,
+      "w_length": 0.5,
+      "top1": 0.9139948526685423,
+      "neighbour": 1.0,
+      "position": 1.0
+    },
+    {
+      "w_shape": 1.0,
+      "w_colour": 0.5,
+      "w_length": 0.5,
+      "top1": 0.9124408384043273,
+      "neighbour": 1.0,
+      "position": 1.0
+    },
+    {
+      "w_shape": 1.0,
+      "w_colour": 1.0,
+      "w_length": 1.0,
+      "top1": 0.9070644943183058,
+      "neighbour": 1.0,
+      "position": 1.0
+    }
+  ]
+}

@@ -1,0 +1,369 @@
+{
+  "puzzle": "3x4_seed269787",
+  "classical": [
+    {
+      "piece_a": 0,
+      "side_a": 0,
+      "piece_b": 11,
+      "side_b": 0,
+      "score": 0.8397848806481477,
+      "cost": 0.17460951440905614,
+      "is_neighbour": true,
+      "relative_orientation": 2
+    },
+    {
+      "piece_a": 0,
+      "side_a": 1,
+      "piece_b": 7,
+      "side_b": 3,
+      "score": 0.8481699698962318,
+      "cost": 0.16467422707649843,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 0,
+      "side_a": 3,
+      "piece_b": 6,
+      "side_b": 2,
+      "score": 0.8446453210007822,
+      "cost": 0.16883847820042142,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 1,
+      "side_a": 1,
+      "piece_b": 4,
+      "side_b": 0,
+      "score": 0.9289397024784429,
+      "cost": 0.07371144811067994,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 1,
+      "side_a": 2,
+      "piece_b": 11,
+      "side_b": 1,
+      "score": 0.8946938846374652,
+      "cost": 0.11127364755034197,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 1,
+      "side_a": 3,
+      "piece_b": 6,
+      "side_b": 1,
+      "score": 0.8999878805199646,
+      "cost": 0.10537398183742307,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 2,
+      "side_a": 0,
+      "piece_b": 4,
+      "side_b": 2,
+      "score": 0.884621641909145,
+      "cost": 0.12259524865483735,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 2,
+      "side_a": 3,
+      "piece_b": 5,
+      "side_b": 0,
+      "score": 0.9265517383776829,
+      "cost": 0.07628539199052928,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 3,
+      "side_a": 0,
+      "piece_b": 10,
+      "side_b": 2,
+      "score": 0.9172579738402399,
+      "cost": 0.08636652258176224,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 3,
+      "side_a": 1,
+      "piece_b": 5,
+      "side_b": 2,
+      "score": 0.9307220071472543,
+      "cost": 0.07179464226874664,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 4,
+      "side_a": 0,
+      "piece_b": 1,
+      "side_b": 1,
+      "score": 0.9289397024784437,
+      "cost": 0.07371144811067903,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 4,
+      "side_a": 2,
+      "piece_b": 2,
+      "side_b": 0,
+      "score": 0.8846216419091437,
+      "cost": 0.1225952486548389,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    }
+  ],
+  "siamese_cnn": [
+    {
+      "piece_a": 0,
+      "side_a": 0,
+      "piece_b": 11,
+      "side_b": 0,
+      "score": 0.9986129105091095,
+      "cost": 0.0013880523900395663,
+      "is_neighbour": true,
+      "relative_orientation": 2
+    },
+    {
+      "piece_a": 0,
+      "side_a": 1,
+      "piece_b": 7,
+      "side_b": 3,
+      "score": 0.9871192276477814,
+      "cost": 0.012964448822080763,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 0,
+      "side_a": 3,
+      "piece_b": 3,
+      "side_b": 0,
+      "score": 0.820019394159317,
+      "cost": 0.1984272875897273,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 1,
+      "side_a": 1,
+      "piece_b": 4,
+      "side_b": 0,
+      "score": 0.9992918968200684,
+      "cost": 0.0007083540034012758,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 1,
+      "side_a": 2,
+      "piece_b": 11,
+      "side_b": 1,
+      "score": 0.999207615852356,
+      "cost": 0.0007926982499001551,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 1,
+      "side_a": 3,
+      "piece_b": 6,
+      "side_b": 1,
+      "score": 0.999423086643219,
+      "cost": 0.0005770798353238312,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 2,
+      "side_a": 0,
+      "piece_b": 4,
+      "side_b": 2,
+      "score": 0.9992375075817108,
+      "cost": 0.0007627832634873959,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 2,
+      "side_a": 3,
+      "piece_b": 5,
+      "side_b": 0,
+      "score": 0.9997125566005707,
+      "cost": 0.0002874847192015126,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 3,
+      "side_a": 0,
+      "piece_b": 10,
+      "side_b": 2,
+      "score": 0.9962921738624573,
+      "cost": 0.0037147171639680798,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 3,
+      "side_a": 1,
+      "piece_b": 5,
+      "side_b": 2,
+      "score": 0.9991879165172577,
+      "cost": 0.0008124134011600722,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 4,
+      "side_a": 0,
+      "piece_b": 1,
+      "side_b": 1,
+      "score": 0.9992918968200684,
+      "cost": 0.0007083540034012758,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 4,
+      "side_a": 2,
+      "piece_b": 2,
+      "side_b": 0,
+      "score": 0.9992375075817108,
+      "cost": 0.0007627832634873959,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    }
+  ],
+  "graph_nn": [
+    {
+      "piece_a": 0,
+      "side_a": 0,
+      "piece_b": 11,
+      "side_b": 0,
+      "score": 0.9995163679122925,
+      "cost": 0.00048374907542651346,
+      "is_neighbour": true,
+      "relative_orientation": 2
+    },
+    {
+      "piece_a": 0,
+      "side_a": 1,
+      "piece_b": 10,
+      "side_b": 0,
+      "score": 0.8559743762016296,
+      "cost": 0.15551483763232699,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 0,
+      "side_a": 3,
+      "piece_b": 6,
+      "side_b": 2,
+      "score": 0.9655435681343079,
+      "cost": 0.03506405318676046,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 1,
+      "side_a": 1,
+      "piece_b": 4,
+      "side_b": 0,
+      "score": 0.8225067853927612,
+      "cost": 0.195398546658996,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 1,
+      "side_a": 2,
+      "piece_b": 11,
+      "side_b": 1,
+      "score": 0.9992300271987915,
+      "cost": 0.0007702693825152619,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 1,
+      "side_a": 3,
+      "piece_b": 6,
+      "side_b": 1,
+      "score": 0.999874472618103,
+      "cost": 0.00012553526111815452,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 2,
+      "side_a": 0,
+      "piece_b": 4,
+      "side_b": 2,
+      "score": 0.9839391708374023,
+      "cost": 0.0161912020953831,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 2,
+      "side_a": 3,
+      "piece_b": 5,
+      "side_b": 0,
+      "score": 0.9987008571624756,
+      "cost": 0.001299987455179128,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 3,
+      "side_a": 0,
+      "piece_b": 10,
+      "side_b": 2,
+      "score": 0.9980294108390808,
+      "cost": 0.001972533326260386,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 3,
+      "side_a": 1,
+      "piece_b": 5,
+      "side_b": 2,
+      "score": 0.9992092251777649,
+      "cost": 0.0007910876495730419,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 4,
+      "side_a": 0,
+      "piece_b": 1,
+      "side_b": 1,
+      "score": 0.8225067853927612,
+      "cost": 0.195398546658996,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 4,
+      "side_a": 2,
+      "piece_b": 2,
+      "side_b": 0,
+      "score": 0.9839391708374023,
+      "cost": 0.0161912020953831,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    }
+  ]
+}

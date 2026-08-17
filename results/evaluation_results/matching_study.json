@@ -1,0 +1,26 @@
+{
+  "puzzle": "4x5 rotated",
+  "n_true_seams": 62,
+  "true_seam": {
+    "shape_mean": 0.023455856933440038,
+    "colour_mean": 0.05812077743624038,
+    "length_mean": 0.004953541954819763
+  },
+  "all_admissible": {
+    "shape_mean": 0.05657727997198553,
+    "colour_mean": 0.19389462695808046,
+    "length_mean": 0.005448546878756201
+  },
+  "accuracy": {
+    "n_true_seams": 62,
+    "top1_accuracy": 0.9838709677419355,
+    "top3_accuracy": 1.0,
+    "mean_rank": 0.016129032258064516
+  },
+  "n_best_buddies": 30,
+  "weights": {
+    "shape": 1.0,
+    "colour": 1.0,
+    "length": 0.5
+  }
+}

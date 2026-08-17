@@ -1,0 +1,102 @@
+{
+  "texture_1.00": {
+    "classical": {
+      "neighbour_accuracy": 1.0,
+      "position_accuracy": 1.0,
+      "perfect": 4,
+      "n_puzzles": 4
+    },
+    "siamese_cnn": {
+      "neighbour_accuracy": 1.0,
+      "position_accuracy": 1.0,
+      "perfect": 4,
+      "n_puzzles": 4
+    },
+    "graph_nn": {
+      "neighbour_accuracy": 0.935483870967742,
+      "position_accuracy": 0.85,
+      "perfect": 3,
+      "n_puzzles": 4
+    }
+  },
+  "texture_0.60": {
+    "classical": {
+      "neighbour_accuracy": 1.0,
+      "position_accuracy": 1.0,
+      "perfect": 4,
+      "n_puzzles": 4
+    },
+    "siamese_cnn": {
+      "neighbour_accuracy": 1.0,
+      "position_accuracy": 1.0,
+      "perfect": 4,
+      "n_puzzles": 4
+    },
+    "graph_nn": {
+      "neighbour_accuracy": 1.0,
+      "position_accuracy": 1.0,
+      "perfect": 4,
+      "n_puzzles": 4
+    }
+  },
+  "texture_0.35": {
+    "classical": {
+      "neighbour_accuracy": 1.0,
+      "position_accuracy": 1.0,
+      "perfect": 4,
+      "n_puzzles": 4
+    },
+    "siamese_cnn": {
+      "neighbour_accuracy": 1.0,
+      "position_accuracy": 1.0,
+      "perfect": 4,
+      "n_puzzles": 4
+    },
+    "graph_nn": {
+      "neighbour_accuracy": 0.9596774193548387,
+      "position_accuracy": 0.975,
+      "perfect": 3,
+      "n_puzzles": 4
+    }
+  },
+  "texture_0.20": {
+    "classical": {
+      "neighbour_accuracy": 1.0,
+      "position_accuracy": 1.0,
+      "perfect": 4,
+      "n_puzzles": 4
+    },
+    "siamese_cnn": {
+      "neighbour_accuracy": 1.0,
+      "position_accuracy": 1.0,
+      "perfect": 4,
+      "n_puzzles": 4
+    },
+    "graph_nn": {
+      "neighbour_accuracy": 0.967741935483871,
+      "position_accuracy": 0.975,
+      "perfect": 3,
+      "n_puzzles": 4
+    }
+  },
+  "texture_0.10": {
+    "classical": {
+      "neighbour_accuracy": 0.8387096774193549,
+      "position_accuracy": 0.7875,
+      "perfect": 3,
+      "n_puzzles": 4
+    },
+    "siamese_cnn": {
+      "neighbour_accuracy": 1.0,
+      "position_accuracy": 1.0,
+      "perfect": 4,
+      "n_puzzles": 4
+    },
+    "graph_nn": {
+      "neighbour_accuracy": 0.8064516129032258,
+      "position_accuracy": 0.7000000000000001,
+      "perfect": 1,
+      "n_puzzles": 4
+    }
+  }
+}

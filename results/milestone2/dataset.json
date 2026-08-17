@@ -1,0 +1,50 @@
+{
+  "n_puzzles": 60,
+  "split_puzzles": {
+    "train": 42,
+    "val": 9,
+    "test": 9
+  },
+  "split_note": "split by puzzle, never by pair, and shared by both models",
+  "sizes": [
+    [
+      3,
+      4
+    ],
+    [
+      4,
+      5
+    ],
+    [
+      5,
+      7
+    ]
+  ],
+  "pairs": {
+    "train": {
+      "n_pairs": 10178,
+      "positive": 1454,
+      "negative": 8724,
+      "positive_fraction": 0.14285714285714285
+    },
+    "val": {
+      "n_pairs": 2100,
+      "positive": 300,
+      "negative": 1800,
+      "positive_fraction": 0.14285714285714285
+    },
+    "test": {
+      "n_pairs": 1848,
+      "positive": 264,
+      "negative": 1584,
+      "positive_fraction": 0.14285714285714285
+    }
+  },
+  "negatives_per_positive": 6,
+  "augmentation": [
+    "illumination",
+    "contrast",
+    "colour balance",
+    "noise"
+  ]
+}
