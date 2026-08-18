@@ -1,108 +1,43 @@
 """Milestone 1 / task 5 -- Piece-edge matching.
 
-A single number says how well two sides fit together.  The exact formula
-used by this library is
+One number says how well two sides fit together:
 
-.. math::
+    D(a, b) = w_s * D_shape(a, b) + w_c * D_colour(a, b) + w_l * D_length(a, b)
 
-    D(a, b) \\;=\\; w_s \\, D_{shape}(a,b) \\;+\\; w_c \\, D_{colour}(a,b)
-                \\;+\\; w_l \\, D_{length}(a,b)
+evaluated only for *admissible* pairs; inadmissible pairs get ``D = +inf``.
+A pair is admissible when it could be a real interior seam: never a flat
+(a flat is the outside of the puzzle), never tab-tab or blank-blank, and
+never two sides of the same piece.
 
-evaluated **only** for admissible pairs; inadmissible pairs get
-``D = +inf``.
+The three terms, all dimensionless and independent of piece size:
 
-Admissibility (the "does the shape fit" rule, hard constraints)
----------------------------------------------------------------
-* a **flat** side is a border of the whole puzzle -- it can never be an
-  interior seam, so any pair involving a flat is inadmissible;
-* a **tab** must meet a **blank**: ``tab-tab`` and ``blank-blank`` are
-  inadmissible;
-* a side never matches another side of the same piece.
+``D_shape``
+    RMS of ``p_a(t) + p_b(1-t)`` over the two sides' profiles -- zero for a
+    perfect tab/blank fit, because mating sides are traversed in opposite
+    directions with opposite outward normals.
+``D_colour``
+    RMS difference between the two colour strips, one reversed.  What it
+    measures is selected by ``colour_metric``: ``"ssd"`` asks "is B the same
+    colour as A?", ``"mgc"`` uses :func:`gradient_compatibility` to ask "does
+    A's picture *continue* into B?", and ``"mgc+ssd"`` sums both, each scaled
+    by its own median.  ``colour_norm="meanstd"`` first removes each strip's
+    own mean and spread, cancelling the per-piece illumination differences of
+    a photographed puzzle.
+``D_length``
+    ``|L_a - L_b| / max(L_a, L_b)``, a half-weight tie breaker.
 
-Shape term (does the outline continue)
---------------------------------------
-Each side carries a profile :math:`p(t)`, :math:`t\\in[0,1]`, the signed
-perpendicular deviation from its corner-to-corner chord divided by the chord
-length (positive = outward).  When two pieces are placed next to each other,
-one side is traversed in the opposite direction to the other and the two
-outward normals point in opposite directions, so a **perfect** fit satisfies
-:math:`p_a(t) = -p_b(1-t)`.  The residual of that identity, in RMS, is the
-shape cost:
+Both the shape and the colour term are minimised over integer sample shifts
+of up to ``MAX_SHIFT_FRACTION`` of the side, because corner localisation is
+only accurate to a few pixels and a corner found early on one piece and late
+on its neighbour shifts the whole profile.
 
-.. math::
-
-    D_{shape}(a,b) = \\sqrt{\\tfrac{1}{M}\\sum_{i=1}^{M}
-                     \\bigl(p_a(t_i) + p_b(1-t_i)\\bigr)^2}
-
-Because both profiles are normalised by their own chord length, the term is
-dimensionless and independent of piece size.  A length-consistency term
-
-.. math::
-
-    D_{length}(a,b) = \\frac{|L_a - L_b|}{\\max(L_a, L_b)}
-
-penalises pairing sides of visibly different physical size.
-
-Colour term (does the picture line up)
---------------------------------------
-Each side carries a strip of colours :math:`C(t, d)` sampled at :math:`D`
-depths just inside the piece.  With the same reversal as above, the cost is
-the RMS of the squared colour differences (the "sum of squared differences"
-the brief asks for, divided by the number of terms so it stays in
-``[0, 1]``):
-
-.. math::
-
-    D_{colour}(a,b) = \\sqrt{\\tfrac{1}{3MD}\\sum_{i,d}
-                      \\bigl\\|C_a(t_i,d) - C_b(1-t_i,d)\\bigr\\|^2}
-
-Photometric alternatives
-------------------------
-``build_compatibility(..., colour_metric=...)`` selects what the photometric
-term measures:
-
-``"ssd"`` (default)
-    the squared colour differences above -- "is B the same colour as A?".
-``"mgc"``
-    :func:`gradient_compatibility`, Gallagher's Mahalanobis gradient
-    compatibility -- "does A's picture *continue* into B?".  On the dataset
-    photographs it raises the matcher's top-1 rate from 0.203 to 0.276.
-``"mgc+ssd"``
-    both, each divided by its own median so neither dominates.
-
-``colour_norm="meanstd"`` additionally removes each strip's own mean and
-spread before the SSD comparison, which cancels the per-piece illumination
-differences of a photographed puzzle.
-
-Weights
--------
-The defaults are :math:`w_s = 1.0`, :math:`w_c = 1.0`, :math:`w_l = 0.5`, so
-shape and colour contribute **equally** and length is a half-weight tie
-breaker.  This is justified by the two terms having the same order of
-magnitude on true and on random pairs, so neither needs rescaling to be heard
-(``results/evaluation_results/matching_study.json``, produced by
-``main.py --run matching``):
-
-===========  ============  =====================  ============
-Term         True seams    All admissible pairs   Separation
-===========  ============  =====================  ============
-D_shape      0.024         0.057                  2.4x
-D_colour     0.058         0.194                  3.3x
-D_length     0.005         0.005                  1.1x
-===========  ============  =====================  ============
-
-The two are **not** equally strong, and the report says so rather than
-implying otherwise.  A sweep over eight weightings
-(``results/evaluation_results/weight_study.json``, ``main.py --run weights``)
-measures shape alone at a top-1 match rate of ~0.08 and colour alone at
-~0.88-0.91: on a machine-cut puzzle every tab has nearly the same silhouette,
-so geometry barely separates candidates.  Shape is kept at full weight
-because adding it to colour still *helps* -- top-1 rises to ~0.90-0.92 --
-since it disambiguates precisely the seams colour cannot, those crossing a
-uniformly coloured region.  ``D_length`` is near-constant within a puzzle
-(all pieces are cut to one size), which is why it carries only half weight:
-it contributes nothing on clean data and acts as a safety net when
-segmentation produces a size outlier, as happens on the real photographs.
+Weights default to ``w_s = 1.0``, ``w_c = 1.0``, ``w_l = 0.5``.  The full
+justification -- including the measured separation of each term on true
+versus random seams, and the eight-way weight sweep showing colour carries
+most of the discriminative power (top-1 0.88 alone) while shape carries
+little (0.08) yet still helps where colour cannot -- is report section 6.2,
+reproduced by ``main.py --run weights`` into
+``results/evaluation_results/weight_study.json``.
 """
 
 from __future__ import annotations
@@ -312,28 +247,23 @@ def _normalise_strip(c: np.ndarray, mode: str) -> np.ndarray:
 def gradient_compatibility(colors: np.ndarray, max_shift: int) -> np.ndarray:
     """Mahalanobis gradient compatibility (Gallagher's MGC), pairwise.
 
-    Comparing absolute colour asks *"is B the same colour as A?"*.  That is
-    the wrong question for a printed picture photographed piece by piece: the
-    right one is *"does A's picture continue into B?"*.  MGC asks it directly.
+    Absolute colour asks *"is B the same colour as A?"*; for a picture
+    photographed piece by piece the right question is *"does A's picture
+    continue into B?"*.  MGC asks it directly.
 
-    From A's colour strip, the outward gradient at sample ``t`` is
-    ``G_a(t) = C_a(t, d0) - C_a(t, d1)`` -- how the colour is already changing
-    as it approaches the cut.  Extrapolating one step gives a **prediction**
-    of what lies just beyond the edge, ``P_a(t) = C_a(t, d0) + G_a(t)``, and
-    the residual against what B actually shows there is
+    From A's strip the outward gradient ``G_a = C_a(t,d0) - C_a(t,d1)`` says
+    how the colour is already changing as it approaches the cut; extrapolating
+    one step predicts what lies beyond it, ``P_a = C_a(t,d0) + G_a``.  The
+    residual against what B actually shows, ``r(t) = C_b(1-t,d0) - P_a(t)``,
+    is measured in the metric of A's *own* gradient covariance::
 
-        ``r(t) = C_b(1-t, d0) - P_a(t)``
+        D_mgc(a, b) = (1 / 3M) * sum_t  r(t)^T S_a^-1 r(t)
 
-    That residual is measured not in raw RGB but in the metric of A's *own*
-    gradient covariance ``S_a``:
-
-        ``D_mgc(a, b) = (1 / 3M) * sum_t  r(t)^T S_a^-1 r(t)``
-
-    so a colour change that A's own texture makes routinely is cheap, while
-    one it never makes is expensive.  Because only differences enter, the
-    measure is invariant to any illumination offset, and because it rewards
-    continuation rather than agreement it keeps working where the picture is
-    nearly uniform -- which is exactly the dataset's situation.
+    so a colour change A's texture makes routinely is cheap and one it never
+    makes is expensive.  Only differences enter, so it is invariant to any
+    illumination offset, and because it rewards continuation rather than
+    agreement it still works where the picture is nearly uniform -- exactly
+    the dataset's situation.
 
     The result is symmetrised, ``(D(a,b) + D(b,a)) / 2``, and minimised over
     the same small shift range as the other terms.  ``colors`` is

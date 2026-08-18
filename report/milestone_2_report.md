@@ -135,25 +135,26 @@ Both models are trained under an identical protocol; only the model and the repr
 
 | | Siamese CNN | Graph NN |
 |---|---|---|
-| Best validation AUC | **0.9969** (epoch 16) | **0.9909** (epoch 30) |
-| Training AUC at that epoch | 0.9915 | 0.9912 |
-| Final training loss | 0.1125 | 0.2053 |
-| Final validation loss | 0.0659 | 0.1185 |
-| Epochs run | 24 | 30 |
-| Wall-clock training | **918 s** | **20 s** |
-| Diagnosis | healthy (val AUC 0.997, train-val gap -0.005) | healthy (val AUC 0.991, train-val gap 0.000) |
+| Best validation AUC | **0.9953** (epoch 25) | **0.9900** (epoch 27) |
+| Final training AUC | 0.9977 | 0.9937 |
+| Final validation AUC | 0.9939 | 0.9886 |
+| Final training loss | 0.0960 | 0.1819 |
+| Final validation loss | 0.0836 | 0.1148 |
+| Epochs run | 30 | 30 |
+| Wall-clock training | **1315 s** | **23 s** |
+| Diagnosis | healthy (val AUC 0.995, train-val gap 0.002) | healthy (val AUC 0.990, train-val gap 0.003) |
 
 **Over- or under-fitting.** Neither. Both train/validation AUC gaps at the
-selected epoch are ~0.00, and both validation losses fall throughout. Note
-that validation AUC sits *slightly above* training AUC for much of the run,
-which looks wrong until one remembers that the training batches are augmented
-and half their negatives are mined from the hardest available candidates,
-while validation is neither — the training set is deliberately the harder of
-the two.
+selected epoch are ~0.00 (0.002 and 0.003), and both validation losses fall
+throughout. Note that validation AUC sits *above* training AUC for the early
+epochs, which looks wrong until one remembers that the training batches are
+augmented and half their negatives are mined from the hardest available
+candidates, while validation is neither — the training set is deliberately the
+harder of the two.
 
 **The training-cost gap is the first real difference between the models.**
-The Siamese needs 45x longer to train
-(918 s versus 20 s) for
+The Siamese needs 57x longer to train
+(1315 s versus 23 s) for
 3.5x the parameters, because it convolves over a 2,048-value
 tensor per side while the graph model consumes a 45-number descriptor and
 scores a whole puzzle in one pass.
@@ -182,26 +183,25 @@ All three methods are evaluated on the **same unseen test puzzles**, which neith
 
 | Measure | Classical | Siamese CNN | Graph NN |
 |---|---|---|---|
-| Matching top-1 | 0.932 | **0.932** | 0.885 |
-| Matching AUC | 0.951 | **0.988** | 0.975 |
-| Best-buddy precision | **1.000** | 0.975 | 0.953 |
-| Neighbour accuracy | 1.000 | 1.000 | 0.967 |
-| Position accuracy | 1.000 | 1.000 | 0.926 |
-| Orientation accuracy | 0.985 | 0.985 | 0.902 |
-| Position **and** orientation | 0.985 | 0.985 | 0.902 |
-| **Complete reconstructions** | 9/9 | 9/9 | 8/9 |
-| Reconstruction quality | 0.572 | **0.961** | 0.874 |
+| Matching top-1 | 0.917 | **0.934** | 0.890 |
+| Matching AUC | 0.942 | **0.986** | 0.969 |
+| Best-buddy precision | **0.997** | 0.983 | 0.968 |
+| Neighbour accuracy | 0.981 | **0.992** | 0.969 |
+| Position accuracy | 0.987 | **0.994** | 0.984 |
+| Orientation accuracy | 0.973 | **0.979** | 0.976 |
+| **Complete reconstructions** | 8/9 | 8/9 | 8/9 |
+| Reconstruction quality | 0.556 | **0.951** | 0.919 |
 | Parameters | 0 | 345,473 | **97,441** |
 | Model size | 0 MB | 1.382 MB | **0.39 MB** |
-| Training time | **0 s** | 918 s | 20 s |
-| Inference / puzzle | **0.018 s** | 0.085 s | 0.015 s |
+| Training time | **0 s** | 1315 s | 23 s |
+| Inference / puzzle | 0.021 s | 0.105 s | **0.020 s** |
 
 **Orientation accuracy** is scored against the rotation each piece held in the
 finished puzzle, allowing one global quarter turn shared by every piece, since
 an arrangement that comes out sideways is still an arrangement. It is worth
 reporting separately from position for a reason visible in the row above:
-position accuracy is 1.000 for two of the three methods while orientation is
-0.985. A piece can sit in the correct cell turned the wrong way, and the
+position accuracy is 0.987-0.994 across the three methods while orientation is
+0.973-0.979. A piece can sit in the correct cell turned the wrong way, and the
 position measure alone calls that a success. Roughly one piece in seventy is
 placed correctly and oriented wrongly — a small effect, but one that only a
 separate measure can see, which is presumably why the brief asks for both.
@@ -213,17 +213,19 @@ every true seam pins that down, because the grid says which way the seam runs.
 against the generator's own record for every piece of a puzzle.
 
 **This table is saturated, and saying so matters more than the numbers in
-it.** Every method reconstructs essentially every test puzzle perfectly, so on
-the measure that counts — did the puzzle come out right — the comparison
-cannot separate them. A ceiling is not a result; it means the test was too
-easy. Two things follow.
+it.** All three methods reconstruct 8 of the 9 test puzzles completely and sit
+within 0.02 of each other on neighbour accuracy, so on the measure that counts
+— did the puzzle come out right — the comparison cannot separate them. The one
+puzzle that fails fails for *every* method, which points at its segmentation
+rather than at any matcher. A ceiling is not a result; it means the test was
+too easy. Two things follow.
 
 First, the measures *underneath* the ceiling do separate them, and in a
 consistent direction: the Siamese ranks candidates best (AUC
-0.988 against the classical 0.951), and the
+0.986 against the classical 0.942), and the
 reconstruction-quality score — how much better than chance the seams actually
-paid are — rises from 0.57 for the classical measure to
-0.96 for the Siamese. All three are equally *correct* here;
+paid are — rises from 0.56 for the classical measure to
+0.95 for the Siamese. All three are essentially equally *correct* here;
 the learned matchers are far more *confident*, which is what buys margin when
 the input gets harder.
 
@@ -236,28 +238,31 @@ AUC / neighbour accuracy, and matching time per puzzle in seconds:
 
 | Grid | Classical | Siamese | Graph NN | t class. | t Siam. | t GNN |
 |---|---|---|---|---|---|---|
-| 3x4 | 0.926 / 1.00 | 0.980 / 1.00 | 0.965 / 0.93 | 0.009 | 0.054 | 0.008 |
-| 4x5 | 0.972 / 1.00 | 0.992 / 1.00 | 0.976 / 1.00 | 0.015 | 0.094 | 0.015 |
-| 5x7 | 0.969 / 1.00 | 0.998 / 1.00 | 0.991 / 1.00 | 0.038 | 0.162 | 0.025 |
+| 3x4 | 0.926 / 1.00 | 0.980 / 1.00 | 0.970 / 1.00 | 0.008 | 0.060 | 0.010 |
+| 4x5 | 0.971 / 1.00 | 0.994 / 1.00 | 0.976 / 1.00 | 0.019 | 0.103 | 0.019 |
+| 5x7 | 0.932 / 0.91 | 0.987 / **0.97** | 0.957 / 0.86 | 0.039 | 0.180 | 0.025 |
 
-Two things move in opposite directions as the puzzle grows.
+**Size is what finally separates the three methods.** At 3x4 and 4x5 every
+method reconstructs every puzzle perfectly and the comparison is saturated
+exactly as in §6.1. At 5x7 — 35 pieces, the size of the real jigsaw — the
+ceiling breaks and an ordering appears: the Siamese holds 0.97 neighbour
+accuracy, the classical formula drops to 0.91, and the graph model to 0.86.
 
-**Accuracy improves.** Every method's AUC rises with piece count — the Siamese
-from 0.980 at 3x4 to 0.998 at
-5x7, the graph model from 0.965 to
-0.991. A bigger puzzle brings more constraints as
-well as more pieces, and the border/flat rules bite harder as the perimeter
-grows.
+That ordering matches the AUC column underneath it at every size, which is the
+reassuring part: the ranking quality measured *before* any assembly predicts
+which method survives when assembly gets hard. The Siamese is the best ranker
+at all three sizes (0.98-0.99) and the best reconstructor at the only size
+where reconstruction is not free.
 
-**Cost grows.** Matching time roughly triples from 3x4 to 5x7 for every
-method, because the number of candidate side pairs goes as the square of the
-piece count.
+**Cost grows quadratically.** Matching time roughly quadruples from 3x4 to 5x7
+for every method, because the number of candidate side pairs goes as the square
+of the piece count. The graph model is the cheapest at every size and the
+Siamese the most expensive by a factor of five to seven — the accuracy it wins
+at 5x7 is bought with the largest inference bill of the three.
 
-The graph model's single imperfect run is on the *smallest* grid, and that is
-explicable rather than random: its whole mechanism is to judge a side against
-its rivals, and a 3x4 puzzle offers the least context to do that with. The
-model that depends on context is the one that suffers when there is least of
-it.
+Note that this table is a *different* slice of the same nine test puzzles as
+§6.1, grouped by size rather than pooled, so the 5x7 row is the hardest three
+puzzles rather than an average over easy and hard together.
 
 ### 6.3 Breaking the ceiling: fading the picture out
 
@@ -268,31 +273,40 @@ demand by fading a generated picture towards flat grey — `texture = 1` is the
 ordinary picture, `texture = 0` is featureless — which withdraws the
 photometric signal while leaving everything else alone.
 
-Neighbour accuracy, four 4x5 puzzles per level:
+Neighbour accuracy, and complete reconstructions, over **twenty** 4x5 puzzles
+per level:
 
 | Texture | Classical | Siamese CNN | Graph NN |
 |---|---|---|---|
-| 1.00 | 1.00 | **1.00** | 0.94 |
-| 0.60 | 1.00 | **1.00** | 1.00 |
-| 0.35 | 1.00 | **1.00** | 0.96 |
-| 0.20 | 1.00 | **1.00** | 0.97 |
-| 0.10 | 0.84 | **1.00** | 0.81 |
+| 1.00 | 0.95 (18/20) | **0.98** (18/20) | 0.97 (18/20) |
+| 0.60 | 0.97 (18/20) | **0.99** (19/20) | 0.98 (19/20) |
+| 0.35 | **0.97** (18/20) | 0.94 (18/20) | 0.96 (17/20) |
+| 0.20 | **0.97** (18/20) | 0.94 (17/20) | 0.97 (18/20) |
+| 0.10 | **0.92** (15/20) | 0.87 (13/20) | 0.83 (12/20) |
 
-**This is the result the standard split could not give.** Down to texture
-0.20 every method is perfect and the comparison stays saturated. At texture
-0.10 the hand-designed formula breaks — 0.84 — while **the Siamese CNN still
-reconstructs every puzzle perfectly**. The learned matcher is not merely
-better calibrated; it keeps working after the classical one has run out of
-signal, and it does so in exactly the regime that matters, because that
-regime is where the real dataset lives.
+**An earlier version of this report drew the opposite conclusion from this
+experiment, and it was wrong.** That version ran four puzzles per level, found
+the Siamese at 1.00 where the classical measure fell to 0.84, and reported
+that the learned matcher "keeps working after the classical one has run out of
+signal" — the strongest claim it made for learning. Re-running the identical
+sweep with twenty puzzles per level instead of four reverses it: at texture
+0.10 the **classical** measure is the most robust of the three (0.92), and the
+Siamese is second (0.87).
 
-The graph model does not share the advantage (0.81 at texture 0.10, and the
-weakest of the three at full texture too). Its node descriptor pools colour
-into eight bins along the side, which is enough when the picture is
-informative but discards the fine variation that is all that remains when it
-is not. The Siamese, convolving over the full 64x8 strip, still has something
-to work with. That is a representation difference, not a capacity difference:
-the graph model is the smaller network but it is also the blunter *input*.
+With four puzzles a single reconstruction is 25 % of the score, so the earlier
+table was reporting sampling noise as a finding. The retained lesson is
+methodological as much as it is about matchers: the sweep was the one
+experiment in this milestone designed to break a ceiling, and it was run at a
+sample size that could not support the conclusion drawn from it.
+
+What survives is weaker and more plausible. Down to texture 0.20 all three
+methods sit between 0.94 and 0.97 and are not meaningfully separated. At
+texture 0.10 every method degrades, the ordering is classical > Siamese >
+graph, and the gap between best and worst (0.92 to 0.83) is comparable to the
+spread the earlier sample size was mistaking for signal. **Learning does not
+buy robustness to a vanishing picture** — which is consistent with §6.4, where
+the real photographs, whose picture really has almost vanished, also fail to
+separate the methods.
 
 ### 6.4 The real dataset photographs
 
@@ -301,27 +315,33 @@ generated puzzles and are here asked about photographs of a real jigsaw.
 Eight full-scramble photographs, scored against the answer key recovered in
 Milestone 1 §9.1:
 
-The classical baseline is run here in **its own Milestone 1 configuration**
-(`colour_norm="meanstd"`, `main.DATASET_SOLVER`). That matters: Milestone 1 §6
-adds that normalisation specifically because the pieces lie under uneven light,
-and measured it lifting top-1 from 0.193 to 0.251. An earlier version of this
-evaluation called `build_compatibility` with its defaults and so compared the
-networks against a classical method with its illumination correction switched
-off. The corrected figures are below; the earlier ones understated the
-baseline by 0.05 neighbour accuracy.
+The classical baseline is run here in **its own Milestone 1 configuration** —
+the full `main.DATASET_SOLVER` matcher settings, `colour_norm="meanstd"` *and*
+`colour_metric="mgc"` — and every method shares the same
+`border_mode="soft"` assembly, since that is a property of the search rather
+than of the matcher under test. This has now been got wrong twice and fixed
+twice: an early version called `build_compatibility` with its defaults, so the
+networks were compared against a classical method with its illumination
+correction switched off, and a later one missed the gradient-compatibility
+term and the soft border rule that Milestone 1 §9.3 added afterwards. Both are
+the same mistake — comparing against a baseline that its own milestone no
+longer runs — and it is worth naming because it flatters the learned methods
+by default.
 
 | Measure | Classical | Siamese CNN | Graph NN |
 |---|---|---|---|
-| Neighbour accuracy | 0.222 | **0.224** | 0.157 |
-| Position accuracy | **0.138** | 0.092 | 0.121 |
-| Reconstruction quality | 0.120 | 0.555 | 0.561 |
+| Neighbour accuracy | 0.208 | **0.218** | 0.150 |
+| Position accuracy | **0.118** | 0.070 | 0.107 |
+| Reconstruction quality | 0.387 | 0.620 | 0.661 |
 
 **None of the three reconstructs the real puzzle, and none of them is
-meaningfully ahead.** Classical and Siamese are separated by 0.002 of
-neighbour accuracy — under one percent, far inside the spread across the eight
-images (0.16 to 0.28) — and on *position* accuracy the classical measure is
-the best of the three. Roughly one adjacency in five is all any method
-achieves, against about one in twenty by chance.
+meaningfully ahead.** Classical and Siamese are separated by 0.010 of
+neighbour accuracy — far inside the spread across the eight images, which runs
+from 0.15 to 0.29 for the classical measure alone — and on *position* accuracy
+the classical measure is the best of the three by a wide margin (0.118 against
+the Siamese's 0.070). Per-image, the Siamese wins five of eight and loses
+three. Roughly one adjacency in five is all any method achieves, against about
+one in twenty by chance.
 
 That is a more useful result than the one this section previously reported.
 Learning does not help here. Whatever the Siamese gains on the low-texture
@@ -332,13 +352,14 @@ cut geometry all at once.
 The reconstruction-quality column must not be read across methods at all.
 It normalises each arrangement's mean seam cost by the mean of that method's
 *own* cost table, and the learned tables are `−log p` while the classical one
-is a weighted RMS distance — scoring a single fixed arrangement with all three
-tables gives 0.53, 0.99 and 0.98 for the same arrangement. The column is a
-valid relative measure within one method and meaningless between them.
+is a weighted RMS distance, so the three columns are in three different units.
+The column is a valid relative measure within one method and meaningless
+between them.
 
-Why the domain shift is severe is not mysterious. The texture sweep (§6.3)
-changes one thing at a time and the Siamese survives it. The photographs
-change several at once: a nearly white picture, per-piece illumination and
+Why the domain shift is severe is not mysterious, and §6.3 now agrees with
+this section rather than contradicting it. The sweep withdraws one variable
+under control and already fails to separate the methods; the photographs
+change several at once — a nearly white picture, per-piece illumination and
 white balance, perspective differences between the centre and the edge of the
 frame, and a die-cut geometry with a kerf that the generator does not model.
 Training on generated puzzles cannot cover that, and the honest conclusion is
@@ -349,65 +370,78 @@ that the ceiling here is the training distribution rather than the model.
 The brief asks for the most accurate and the most computationally efficient
 method. They are not the same one, and neither answer is unqualified.
 
-**Most accurate: the Siamese CNN, on generated puzzles only.** It ranks
-candidates best on the standard split (AUC 0.988 against 0.951) and it is the
-only method that survives the low-texture condition intact (1.00 where the
-classical formula falls to 0.84). That is the whole of its advantage: on the
-real photographs it ties the classical measure on neighbour accuracy (0.224
-against 0.222) and loses to it on position accuracy (0.092 against 0.138). It
-costs 345 k parameters, 1.4 MB and sixteen minutes of training to get there,
-and the claim rests entirely on generated data.
+**Most accurate: the Siamese CNN, narrowly, and on generated puzzles only.**
+It ranks candidates best on the standard split (AUC 0.986 against the
+classical 0.942) and it is the best reconstructor at the only generated size
+where reconstruction is not free — 0.97 neighbour accuracy at 5x7, against
+0.91 classical and 0.86 graph (§6.2). That is the whole of its advantage. It
+does *not* survive the low-texture sweep better than the classical measure
+(§6.3), and on the real photographs it gains 0.010 of neighbour accuracy while
+losing 0.048 of position accuracy. It costs 345 k parameters, 1.4 MB and
+twenty-two minutes of training to get there.
 
 **Most efficient: the graph neural network** — and by a wide margin. It reaches
-AUC 0.975, within 0.013 of the Siamese, using **3.5x fewer parameters**
-(97 k, 0.39 MB), **47x less training time** (21 s against 968 s) and inference
-*as fast as the hand-written classical formula* (0.015 s against 0.017 s per
-puzzle, where the Siamese needs 0.088 s). For a matcher that has to run inside
+AUC 0.969, within 0.017 of the Siamese, using **3.5x fewer parameters**
+(97 k, 0.39 MB), **57x less training time** (23 s against 1315 s) and inference
+*as fast as the hand-written classical formula* (0.020 s against 0.021 s per
+puzzle, where the Siamese needs 0.105 s). For a matcher that has to run inside
 a search loop, that is the difference that would matter in practice. Its
-weakness is the blunter input representation, not the architecture: it pools
-colour into eight bins and therefore has least to say exactly when the picture
-has least to give.
+weakness is accuracy at the largest size and at the lowest texture, where it is
+the worst of the three.
 
-**Most economical overall: the classical measure**, which needs no training
-data, no training time and no parameters, matches the learned models wherever
-the picture is informative, and — once run in its own configuration — matches
-them on the real photographs too. It should be preferred unless the input is
-genuinely hard in the one specific way the sweep isolates: a picture whose
-texture has been withdrawn while everything else stays constant. That boundary
-sits at around texture 0.15, and the dataset's own photographs are not on the
-far side of it in a way any of these methods can exploit.
+**Most economical overall: the classical measure.** It needs no training data,
+no training time and no parameters; it matches the learned models wherever the
+picture is informative; it is the *most robust* of the three as the picture
+fades (§6.3); and it is the best of the three on position accuracy on the real
+photographs. Its one clear loss is at 5x7 on generated puzzles, where the
+Siamese is six points ahead on neighbour accuracy.
+
+The honest summary is that no method dominates. The Siamese wins the largest
+generated puzzles, the graph model wins on cost, and the classical measure
+wins on robustness and on every practical consideration that is not raw
+accuracy at 35 pieces.
 
 ### 6.6 What was learned
 
 1. **A saturated benchmark hides everything.** All three methods reconstruct
-   every standard test puzzle perfectly. Had the evaluation stopped there, the
-   report would have concluded that the models are equivalent, which the
-   texture sweep shows is false.
-2. **Learning buys robustness on one controlled axis, and nothing else.**
-   Where the picture is informative the hand-designed formula is already at
-   the ceiling. The learned matchers earn their keep only as texture is
-   withdrawn with everything else held constant — and on the real
-   photographs, which vary everything at once, they do not beat the classical
-   measure at all. That is a narrower and better-supported claim than a
-   general preference for neural networks.
-3. **Representation beat capacity.** The larger model won, but the mechanism
-   was the richer input (a 64x8 strip versus eight pooled colour bins), not
-   the extra parameters. The graph model's contextual message passing gave it
-   nearly the same AUC on a fraction of the budget.
-4. **A reference-free quality score cannot be read across methods.** The
+   8 of 9 standard test puzzles, within 0.02 of each other. Had the evaluation
+   stopped there it would have concluded the methods are equivalent. Only the
+   5x7 slice (§6.2) separates them, and the separation is modest.
+2. **Sample size decided a headline claim, and nearly got it wrong.** The
+   low-texture sweep at four puzzles per level said learning buys robustness;
+   the same sweep at twenty puzzles per level says the opposite, with the
+   classical measure the most robust of the three. One reconstruction was a
+   quarter of the old score. Any experiment intended to break a ceiling has to
+   be powered well enough to support the conclusion drawn from it, and this one
+   was not.
+3. **Learning did not buy robustness to a vanishing picture.** This is the
+   corrected version of what was previously this report's strongest claim.
+   Where the picture is informative the hand-designed formula is already at the
+   ceiling; where the picture fades, the classical measure degrades most
+   gracefully; and on the real photographs, which vary texture, lighting,
+   perspective and cut geometry at once, none of the three separates. What the
+   Siamese does buy is accuracy on the *largest* generated puzzles.
+4. **Representation beat capacity.** The larger model won on accuracy, but the
+   mechanism was the richer input (a 64x8 strip versus eight pooled colour
+   bins), not the extra parameters. The graph model's contextual message
+   passing gave it nearly the same AUC on a fraction of the budget.
+5. **A reference-free quality score cannot be read across methods.** The
    reconstruction-quality figure normalises by each method's own cost
-   distribution, so it says nothing about which arrangement is better: scoring
-   one fixed arrangement with all three tables returns 0.53, 0.99 and 0.98.
-   An earlier draft of this report read the gap as evidence that the learned
-   models were confidently wrong. It was evidence about the normalisation.
-   The score remains useful for ranking arrangements *within* one matcher and
-   must not be used between them.
-5. **The binding constraint is the training distribution.** The Siamese
-   handles low texture when that is the only change, and fails on photographs
-   that change texture, lighting, perspective and cut geometry at once. The
-   next step for this project is not a bigger network but training data drawn
-   from the photographs themselves — which needs side-level labels the dataset
-   does not currently carry.
+   distribution, and the learned tables are `-log p` while the classical one is
+   a weighted RMS distance, so the columns are in different units. An earlier
+   draft read the gap as evidence that the learned models were confidently
+   wrong. It was evidence about the normalisation. The score is useful for
+   ranking arrangements *within* one matcher and must not be used between them.
+6. **Compare against the baseline your own project actually runs.** The
+   classical baseline was configured wrongly twice here (§6.4), each time in
+   the direction that flattered the learned methods, and each time because
+   Milestone 1 had improved and this milestone had not followed. A stale
+   baseline is the easiest way to manufacture a result.
+7. **The binding constraint is the training distribution.** The models are fit
+   to generated puzzles and asked about photographs of a real jigsaw. The next
+   step for this project is not a bigger network but training data drawn from
+   the photographs themselves — which needs side-level labels the dataset does
+   not currently carry.
 
 ---
 

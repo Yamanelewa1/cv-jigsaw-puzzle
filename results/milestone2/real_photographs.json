@@ -1,23 +1,23 @@
 {
   "classical": {
-    "neighbour_accuracy": 0.2215541541470528,
-    "position_accuracy": 0.13764390011869848,
-    "quality": 0.11990946587169507,
-    "seconds_per_puzzle": 0.18723546249748324,
+    "neighbour_accuracy": 0.20760907724870598,
+    "position_accuracy": 0.11758832565284177,
+    "quality": 0.3868743515904635,
+    "seconds_per_puzzle": 0.8544650374897174,
     "n_images": 8
   },
   "siamese_cnn": {
-    "neighbour_accuracy": 0.22409654179360688,
-    "position_accuracy": 0.09230172549224969,
-    "quality": 0.5548158978715096,
-    "seconds_per_puzzle": 0.3651171749952482,
+    "neighbour_accuracy": 0.21844316812182146,
+    "position_accuracy": 0.07032188241865661,
+    "quality": 0.6200279623480575,
+    "seconds_per_puzzle": 0.52456236249418,
     "n_images": 8
   },
   "graph_nn": {
-    "neighbour_accuracy": 0.15661820306511806,
-    "position_accuracy": 0.12108196742773356,
-    "quality": 0.5613945311960779,
-    "seconds_per_puzzle": 0.21750935000090976,
+    "neighbour_accuracy": 0.15007781742612858,
+    "position_accuracy": 0.10668551878229297,
+    "quality": 0.6614806192704124,
+    "seconds_per_puzzle": 0.5333213124904432,
     "n_images": 8
   }
 }

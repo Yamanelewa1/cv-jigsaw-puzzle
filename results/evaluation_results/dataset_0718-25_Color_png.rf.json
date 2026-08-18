@@ -6,24 +6,24 @@
   ],
   "n_pieces": 36,
   "timings": {
-    "enhancement": 2.909020999999484,
-    "segmentation": 12.073467699985486,
-    "contours": 0.2929135000158567,
-    "description": 1.826273900020169,
-    "matching": 0.03471450001234189,
-    "assembly": 0.15500969998538494,
-    "rendering": 11.7767227999866,
-    "total": 29.06857519998448
+    "enhancement": 2.3107698999810964,
+    "segmentation": 10.347755199996755,
+    "contours": 0.3037720999564044,
+    "description": 2.3929405999951996,
+    "matching": 0.7538494000327773,
+    "assembly": 0.5670844999840483,
+    "rendering": 16.475768899952527,
+    "total": 33.152636000013445
   },
   "seam": {
     "n_seams": 58,
-    "n_illegal_seams": 2,
-    "mean_seam_cost": 1.254436108468035,
-    "median_seam_cost": 1.2270571145329532,
-    "max_seam_cost": 1.7314226565228659,
-    "random_baseline_cost": 1.413737575239929,
-    "quality": 0.11268107289633189,
-    "n_forced_placements": 3,
+    "n_illegal_seams": 6,
+    "mean_seam_cost": 3.8698652176418014,
+    "median_seam_cost": 3.0907499781913557,
+    "max_seam_cost": 17.125139647190682,
+    "random_baseline_cost": 5.920940499126568,
+    "quality": 0.3464103856114299,
+    "n_forced_placements": 9,
     "complete": true
   },
   "matching": {},
@@ -32,6 +32,6 @@
   "rotation": {},
   "image": {},
   "notes": [
-    "67 raw components, 36 kept, 3 blob(s) split into touching pieces, 36 pieces"
+    "67 raw components, 33 kept, 3 blob(s) split into touching pieces, 36 pieces"
   ]
 }

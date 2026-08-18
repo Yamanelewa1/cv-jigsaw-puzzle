@@ -1,102 +1,102 @@
 {
   "texture_1.00": {
     "classical": {
-      "neighbour_accuracy": 1.0,
-      "position_accuracy": 1.0,
-      "perfect": 4,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.9548387096774194,
+      "position_accuracy": 0.945,
+      "perfect": 18,
+      "n_puzzles": 20
     },
     "siamese_cnn": {
-      "neighbour_accuracy": 1.0,
-      "position_accuracy": 1.0,
-      "perfect": 4,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.9806451612903226,
+      "position_accuracy": 0.99,
+      "perfect": 18,
+      "n_puzzles": 20
     },
     "graph_nn": {
-      "neighbour_accuracy": 0.935483870967742,
-      "position_accuracy": 0.85,
-      "perfect": 3,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.9741935483870968,
+      "position_accuracy": 0.985,
+      "perfect": 18,
+      "n_puzzles": 20
     }
   },
   "texture_0.60": {
     "classical": {
-      "neighbour_accuracy": 1.0,
-      "position_accuracy": 1.0,
-      "perfect": 4,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.9693548387096774,
+      "position_accuracy": 0.985,
+      "perfect": 18,
+      "n_puzzles": 20
     },
     "siamese_cnn": {
-      "neighbour_accuracy": 1.0,
-      "position_accuracy": 1.0,
-      "perfect": 4,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.9887096774193548,
+      "position_accuracy": 0.9949999999999999,
+      "perfect": 19,
+      "n_puzzles": 20
     },
     "graph_nn": {
-      "neighbour_accuracy": 1.0,
-      "position_accuracy": 1.0,
-      "perfect": 4,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.9838709677419356,
+      "position_accuracy": 0.9925,
+      "perfect": 19,
+      "n_puzzles": 20
     }
   },
   "texture_0.35": {
     "classical": {
-      "neighbour_accuracy": 1.0,
-      "position_accuracy": 1.0,
-      "perfect": 4,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.9741935483870968,
+      "position_accuracy": 0.9875,
+      "perfect": 18,
+      "n_puzzles": 20
     },
     "siamese_cnn": {
-      "neighbour_accuracy": 1.0,
-      "position_accuracy": 1.0,
-      "perfect": 4,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.9403225806451612,
+      "position_accuracy": 0.915,
+      "perfect": 18,
+      "n_puzzles": 20
     },
     "graph_nn": {
-      "neighbour_accuracy": 0.9596774193548387,
-      "position_accuracy": 0.975,
-      "perfect": 3,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.9612903225806452,
+      "position_accuracy": 0.9775,
+      "perfect": 17,
+      "n_puzzles": 20
     }
   },
   "texture_0.20": {
     "classical": {
-      "neighbour_accuracy": 1.0,
-      "position_accuracy": 1.0,
-      "perfect": 4,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.9741935483870968,
+      "position_accuracy": 0.9875,
+      "perfect": 18,
+      "n_puzzles": 20
     },
     "siamese_cnn": {
-      "neighbour_accuracy": 1.0,
-      "position_accuracy": 1.0,
-      "perfect": 4,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.9435483870967742,
+      "position_accuracy": 0.9425000000000001,
+      "perfect": 17,
+      "n_puzzles": 20
     },
     "graph_nn": {
       "neighbour_accuracy": 0.967741935483871,
-      "position_accuracy": 0.975,
-      "perfect": 3,
-      "n_puzzles": 4
+      "position_accuracy": 0.9824999999999999,
+      "perfect": 18,
+      "n_puzzles": 20
     }
   },
   "texture_0.10": {
     "classical": {
-      "neighbour_accuracy": 0.8387096774193549,
-      "position_accuracy": 0.7875,
-      "perfect": 3,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.9161290322580644,
+      "position_accuracy": 0.905,
+      "perfect": 15,
+      "n_puzzles": 20
     },
     "siamese_cnn": {
-      "neighbour_accuracy": 1.0,
-      "position_accuracy": 1.0,
-      "perfect": 4,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.8709677419354838,
+      "position_accuracy": 0.8574999999999999,
+      "perfect": 13,
+      "n_puzzles": 20
     },
     "graph_nn": {
-      "neighbour_accuracy": 0.8064516129032258,
-      "position_accuracy": 0.7000000000000001,
-      "perfect": 1,
-      "n_puzzles": 4
+      "neighbour_accuracy": 0.829032258064516,
+      "position_accuracy": 0.75,
+      "perfect": 12,
+      "n_puzzles": 20
     }
   }
 }

@@ -645,23 +645,18 @@ def sample_color_strip(image: np.ndarray, mask: np.ndarray,
                        depths=(2.0, 4.0, 6.0)) -> np.ndarray:
     """Sample the piece's colour just *inside* a side.
 
-    The offset direction is the inward normal of the side's **chord** (the
-    straight corner-to-corner line), not the local tangent normal.  That
-    choice matters: in the throat of a blank the local normal runs almost
-    along the boundary, so stepping along it lands on the background and the
-    strip fills up with black.  The chord normal always points from the cut
-    line into the body of the piece, and -- because two mating sides have
-    exactly opposite chord normals -- it samples corresponding material on
-    both pieces.
+    The offset direction is the inward normal of the side's **chord**, not
+    the local tangent normal: in the throat of a blank the local normal runs
+    almost along the boundary and steps straight into the background, filling
+    the strip with black.  The chord normal always points into the body, and
+    because mating sides have exactly opposite chord normals it samples
+    corresponding material on both pieces.
 
-    Validity is tested against the mask **eroded by two pixels**, not the
-    mask itself.  The outermost ring of a segmented piece is anti-aliased
-    against the background, and the morphological closing that seals the
-    mask can leave another pixel or so of genuine background inside it; a
-    sample landing there would drag background colour into the signature.
-    A sample that is still invalid is retried at
-    progressively smaller depths and finally pulled towards the centroid, so
-    the strip never contains background.
+    Validity is tested against the mask **eroded by two pixels**: a segmented
+    piece's outermost ring is anti-aliased against the background, and the
+    closing that seals the mask pulls in a further pixel or so of real
+    background.  Invalid samples are retried at smaller depths, then pulled
+    towards the centroid, so the strip never contains background.
 
     Returns ``(M, len(depths), 3)``.
     """
@@ -797,23 +792,19 @@ def calibrate_side_types(descriptions: list[PieceDescription],
                          lo: float = 0.02, hi: float = 0.22) -> float:
     """Re-classify flat vs. tab/blank with a threshold learnt from the puzzle.
 
-    A fixed ``flat_tol`` is fragile: it has to hold across resolutions,
-    camera angles and how crisply a particular puzzle is cut.  Two facts about
-    the *whole* puzzle pin the boundary down instead:
+    A fixed ``flat_tol`` has to hold across resolutions, camera angles and how
+    crisply a puzzle is cut.  Two facts about the *whole* puzzle pin the
+    boundary down instead: the amplitudes are strongly bimodal (flats near
+    zero, tabs and blanks near 0.3), and an ``R x C`` grid exposes **exactly**
+    ``2(R + C)`` flat sides, so for every factor pair of ``N`` the flat count
+    is known in advance.
 
-    * the amplitudes are strongly bimodal -- flats cluster near zero, tabs and
-      blanks near 0.3;
-    * an ``R x C`` grid of ``N = R*C`` pieces exposes **exactly**
-      ``2(R + C)`` flat sides (its perimeter), so for every factor pair of
-      ``N`` the total number of flats is known in advance.
-
-    Every gap between consecutive sorted amplitudes inside ``[lo, hi]`` is a
-    candidate threshold; a candidate whose flat count equals ``2(R + C)`` for
-    some factor pair is preferred (the widest such gap wins, since a wide gap
-    means the two classes are cleanly separated there), and the widest gap
-    overall is the fallback when segmentation lost pieces and no count can
-    match.  On a dataset photograph this recovers 24 of the 24 expected flat
-    sides, where the fixed default found 14.
+    Every gap between consecutive sorted amplitudes in ``[lo, hi]`` is a
+    candidate threshold.  One whose flat count matches ``2(R + C)`` for some
+    factor pair wins (widest such gap, since a wide gap means the classes
+    separate cleanly there); the widest gap overall is the fallback when
+    segmentation lost pieces and no count can match.  On a dataset photograph
+    this recovers 24 of 24 expected flats where the fixed default found 14.
 
     Modifies the descriptions in place and returns the threshold used.
     """

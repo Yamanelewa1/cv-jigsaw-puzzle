@@ -10,6 +10,7 @@ Every item the brief asks for, where it is implemented, and the test that pins i
 
 | Brief requirement | Implementation | Test |
 |---|---|---|
+| Noise reduction: **mean** filter | `enhancement.mean_filter` (§2.1) | `test_mean_filter_equals_the_plain_neighbourhood_average` |
 | Noise reduction: Gaussian, kernel derived from size **and** sigma | `enhancement.gaussian_kernel_1d` / `gaussian_kernel` / `gaussian_blur` | `test_gaussian_kernel_normalised_and_symmetric` |
 | Noise reduction: median filter, **any loop justified** | `enhancement.median_filter` (§2.1) | `test_median_filter_removes_impulses_gaussian_does_not` |
 | Contrast: histogram equalisation and stretching, **histogram computed by the library** | `enhancement.histogram`, `cumulative_histogram`, `histogram_equalization`, `contrast_stretch` | `test_histogram_equalization_flattens_the_histogram` |
@@ -57,6 +58,8 @@ The dataset carries no explicit answer key — nobody labels which cell of the f
 All routines live in `src/enhancement.py`, which also holds the shared primitives (dtype and colour conversion, padding, the sliding-window view, `convolve2d`, `resize_bilinear`, `integral_image`) that the rest of the package is built on.
 
 ### 2.1 Noise reduction
+
+**Mean.** `mean_filter(size)` replaces each pixel by the unweighted average of its `size x size` neighbourhood. It is the maximum-likelihood estimate of a constant patch under additive Gaussian noise, so it attenuates that noise by a factor of `size`, and the flat kernel is separable in the same way the Gaussian is, so it also runs as two 1-D passes. It is the baseline rather than the tool: a flat kernel has a sinc frequency response with large side lobes, and in the spatial domain it turns a step into a piecewise-linear ramp whose slope jumps at both ends — hard corners along an edge, where the Gaussian's response is smooth everywhere. A test measures exactly that, comparing the largest second difference of the two step responses.
 
 **Gaussian.** `gaussian_kernel_1d(size, sigma)` samples `exp(-x² / 2σ²)` and normalises it; the kernel is derived from both arguments, and when `size` is omitted it defaults to `2⌈3σ⌉ + 1`, which truncates less than 0.3 % of the mass. The 2-D kernel is the outer product of two 1-D kernels, and `gaussian_blur` exploits that separability with two 1-D passes — `O(k)` per pixel instead of `O(k²)`. A test asserts that the separable result equals a full 2-D convolution to 1e-10.
 
@@ -160,11 +163,23 @@ The classical answer is a watershed on the distance transform, and that is what 
 
 The expected piece area defaults to the median component area, which is the correct estimate whenever most pieces are already isolated. On the dataset photographs this single stage lifts segmentation recall from **0.81 to 0.97**.
 
-### 4.4 Boundary tracing
+### 4.5 Estimating "the area of one piece" robustly
+
+Both the watershed above and the area filter that follows it are expressed relative to an estimate of how large one puzzle piece is, so that no pixel count is hard-coded. That estimate was originally the plain median of the component areas, and it has a failure mode that cost 32 of 35 pieces on one photograph.
+
+The watershed occasionally sheds a **swarm of slivers** along its influence-zone boundary — dozens of components of a few hundred pixels each. A median counts components, so once the slivers outnumber the pieces the median follows the slivers: on `0718-30` it fell from ~7700 px to ~4700 px, the `[0.45, 1.7] × reference` window then straddled the gap between slivers and pieces, and `filter_components` kept **3 components out of 35**.
+
+The obvious repair — an *area-weighted* median, which slivers cannot move because they carry no area — fails in the opposite direction: a few unresolved blobs of four merged pieces carry a great deal of area and drag the estimate up, so the same window then deletes the real pieces. Neither statistic is safe alone.
+
+`segmentation.reference_area` therefore cuts the debris first and takes a plain median of what survives, with the cut anchored on the **upper** end of the distribution (10 % of the 90th percentile) rather than on the median — because the median is precisely the statistic the debris has already corrupted. A percentile rather than the maximum keeps one enormous blob from setting the scale. It reduces to the plain median whenever every component is already about the same size, which is the case on synthetic puzzles and on clean photographs.
+
+Across the 50 photographs this removes the catastrophic failures: the worst case goes from **3 pieces recovered to 35**, and 48 of 50 photographs now land within ±2 of the true count.
+
+### 4.6 Boundary tracing
 
 `contour_extraction.trace_boundary` is **Moore-neighbour tracing with Jacob's stopping criterion**. From the current boundary pixel we walk clockwise around its 8-neighbourhood, starting from the background pixel we came from, until the next foreground pixel is found; that pixel becomes the new boundary point. The stopping rule is *"stop when the start pixel is entered a second time from the same direction"*, not the naive *"stop when you reach the start"* — the naive rule truncates contours that legitimately pass through the start pixel twice, which is common on the thin neck of a jigsaw tab. Getting this wrong was in fact the first bug found during development: the tracer wandered until it hit its step limit and returned contours of 100 000 points for a 180×211 piece.
 
-### 4.5 Piece extraction (continued)
+### 4.7 Piece extraction
 
 `extract_pieces` crops every labelled component to its bounding box (with a small margin so the traced contour never touches the crop border) and stores, in a `Piece`: the RGB crop with background zeroed, the boolean mask, the traced contour in crop coordinates, the centroid, the piece area, and a **normalised orientation** — the rotation of the piece's minimum-area rectangle, computed by `min_area_rect`, a rotating-calipers search over the edges of the convex hull (Andrew's monotone chain). `normalize_piece` uses that angle to rotate a piece upright with bilinear inverse warping.
 
@@ -320,6 +335,21 @@ A better result is never discarded, so `assemble` always returns the best arrang
 
 Once the arrangement is known, `render_assembly` draws it back into a single image. Each piece is mapped onto its grid cell with the **similarity transform** (rotation + uniform scale + translation) that best sends its four corners onto the four corners of the cell. Two correspondences already determine a similarity exactly, and an earlier version used only the two corners of the North-facing side — but then a single mis-located corner carried half the leverage and visibly skewed the piece in the output. The least-squares fit over all four reduces that to a quarter and averages the corner noise out. Because the cut is complementary, the tabs land precisely in the neighbours' blanks and the seams close without any blending trick. A final cosmetic pass fills the hairline cracks that survive where two neighbouring pieces were scaled from slightly different corner estimates; it never invents content where a whole piece is missing.
 
+### 7.6 The border rule as a filter or as a penalty
+
+Stage (i) of §7.2 encodes a genuine fact about a rectangular jigsaw: a cell on the rim of the grid must present a flat side outwards, and an interior cell must not. Enforcing it as a **hard filter** is a large saving — it removes most candidates before their seams are ever scored — and it is exactly right whenever the flat/tab/blank classification can be trusted.
+
+On the dataset photographs it cannot. §9.3 measures the classifier at **79.6 %** correct on a piece's flat count, with only **52 %** of the true corner pieces recognised as corners, against ~100 % on synthetic puzzles. Under that error rate a hard filter is actively harmful, and asymmetrically so: a *missed* flat makes the true border piece inadmissible at every border cell, so the correct placement is not merely ranked low, it is unavailable, and the search must put something else there. Rejecting a correct candidate costs the whole downstream walk, while admitting a wrong one only costs its own seam.
+
+`assemble(border_mode=...)` therefore selects between the two readings:
+
+* `"hard"` (the default) — stage 0 filters, as above. Correct for clean input, and the setting under which the synthetic results of §8.3 are obtained.
+* `"soft"` — stage 0 is skipped, so a border violation is only ever charged `BORDER_PENALTY` and can be outvoted by strong seam evidence. This is what `DATASET_SOLVER` selects.
+
+The distinction is one of *confidence in a constraint*, not of the constraint's truth: the rule is still believed, and still charged for, but it is no longer allowed to veto evidence that comes from a more reliable measurement. Measured over the 50 photographs it lifts neighbour accuracy 0.192 → 0.220, and it leaves the synthetic puzzles at 100 %, so it is not a trade.
+
+A consequence worth recording: a placement is now counted as *forced* when it actually had to break a rule — when it was charged `BORDER_PENALTY` or `DEADEND_PENALTY` — rather than merely because it was scored in a relaxed stage. Under `"soft"` every stage is relaxed, so the old stage-based test would have reported every placement as forced and made the restart ranking of §7.4 meaningless.
+
 ---
 
 ## 8. Reconstruction quality, and validation on clean input
@@ -370,7 +400,7 @@ The SSIM figures near 0.8 on *perfect* reconstructions are a resampling artefact
 
 ## 9. Results on the provided dataset
 
-The `detection/` dataset is a Roboflow YOLO export: photographs of the 35 pieces of one jigsaw on a dark cloth, each piece annotated with its **identity** (1–35) and a bounding box. Most images show a single piece, but **43 training and 7 validation images show all 35 pieces scattered** — those 50 are the real scrambled puzzles this milestone targets, and `python main.py` runs the whole pipeline on every one of them.
+The `detection/` dataset is the YOLO export of [`hobby-projs/puzzle-vrkx6-9xh3l`](https://universe.roboflow.com/hobby-projs/puzzle-vrkx6-9xh3l/dataset/1) on Roboflow Universe: photographs of the 35 pieces of one jigsaw on a dark cloth, each piece annotated with its **identity** (1–35) and a bounding box. Most images show a single piece, but **43 training and 7 validation images show all 35 pieces scattered** — those 50 are the real scrambled puzzles this milestone targets, and `python main.py` runs the whole pipeline on every one of them.
 
 ### 9.1 Recovering an answer key from the annotations
 
@@ -394,18 +424,18 @@ Scored against the annotated boxes, over all **50** full-scramble photographs (`
 
 | Measure | Value |
 |---|---|
-| Piece recall (annotated pieces isolated) | **0.943** |
-| Piece precision (components that are pieces) | **0.939** |
-| F1 | 0.933 |
-| Images where every piece was found (recall = 1.00) | **38 / 50** |
+| Piece recall (annotated pieces isolated) | **0.973** |
+| Piece precision (components that are pieces) | **0.963** |
+| F1 | 0.965 |
+| Images where every piece was found (recall = 1.00) | **41 / 50** |
 | Pieces isolated | 35.1 / 35 on average |
-| Flat sides found | **24.7** vs the 24 a 5×7 grid must expose |
-| Corner pieces found | 3.3 / 4 |
-| Time per photograph | 28 s at native 1920×1080 |
+| Flat sides found | **23.1** vs the 24 a 5×7 grid must expose |
+| Corner pieces found | 3.2 / 4 |
+| Time per photograph | 32 s at native 1920×1080 |
 
 **Splitting touching pieces (§4.4) is what makes this work.** Without it, pieces in contact merge into one component and recall sits at **0.81**; with it, **0.94** here, and 0.97 in a segmentation-only study at the reduced 1280 px working size. Working at native resolution matters too: at 1280 px the piece body is ~75 px and the descriptors are measurably noisier than at 1920 px, where it is ~114 px and the flat/tab amplitude histogram separates cleanly.
 
-**Description is essentially correct on real photographs.** Averaged over the 50 images the library finds 24.7 flat sides against the 24 a 5×7 grid must expose, and 3.3 corner pieces of 4; on a representative photograph it finds exactly 24 and exactly 4, using the calibrated threshold of §5.1 where the fixed default found 14 and 0. So the pieces, their corners, their four sides and their types are all recovered from the real data.
+**Description is essentially correct on real photographs.** Averaged over the 50 images the library finds 23.1 flat sides against the 24 a 5×7 grid must expose, and 3.2 corner pieces of 4; on a representative photograph it finds exactly 24 and exactly 4, using the calibrated threshold of §5.1 where the fixed default found 14 and 0. So the pieces, their corners, their four sides and their types are all recovered from the real data.
 
 ### 9.3 Reconstruction
 
@@ -413,16 +443,41 @@ The same 50 photographs, scored against the answer key of §9.1:
 
 | Measure | Real photographs | Synthetic, for contrast (§8.3) |
 |---|---|---|
-| Neighbour accuracy | **0.192** | 0.970 |
-| Position accuracy | **0.119** | 0.989 |
-| Reference-free quality | 0.126 | 0.47–0.53 |
-| Best single image | 0.417 neighbour | 1.000 |
+| Neighbour accuracy | **0.220** | 0.970 |
+| Position accuracy | **0.131** | 0.989 |
+| Matcher top-1 | 0.324 | 0.90 |
+| Best single image | 0.328 neighbour | 1.000 |
 
 **The reconstruction does not succeed on this dataset.** Roughly one adjacency in five is correct, against about one in twenty by chance — a real signal, but nowhere near a solved puzzle. That is the honest result, and its cause is identifiable rather than mysterious.
 
-**Why.** The bottleneck is the compatibility measure, not the search. Asking of every side whether its cheapest partner lies on a genuinely adjacent piece — a measure that needs no knowledge of any piece's rotation, so it isolates the matcher — gives a top-1 rate of **0.25** against **0.09** for chance, where the same measure reaches **0.90** on synthetic puzzles.
+Those figures use the photograph preset (`main.DATASET_SOLVER`). It differs from the library defaults in exactly two settings, each measured over all 50 answer-keyed photographs from cached descriptors so that only the stage under test varies:
 
-Five things were tried to close the gap, and the outcome of each is recorded in `results/evaluation_results/`: more restarts (saturates at 4), five colour-sampling variants (all plateau at 0.24–0.26), a wider alignment search (monotonically worse, so misalignment is not the limit), beam search over placements (no gain, and a regression on clean input), and Gallagher's Mahalanobis Gradient Compatibility (§6.3 — raises the matcher by 36 %, to top-1 0.276, and leaves the reconstruction unchanged). The MGC result is the informative one: it is the strongest classical photometric measure available, it extracts more signal exactly as the literature predicts, and the reconstruction still does not move.
+| Configuration | Matcher top-1 | Neighbour acc. | Position acc. |
+|---|---|---|---|
+| colour SSD, hard border rule | 0.267 | 0.189 | 0.119 |
+| **+ MGC** photometric term (§6.3) | 0.324 | 0.192 | 0.132 |
+| **+ soft border rule** (§7.6) | 0.324 | **0.220** | **0.131** |
+
+Both are real but small: +16 % neighbour accuracy, better on 26 of the 50 photographs and worse on 18. The synthetic puzzles stay at 100 % under the same settings, so neither trades clean-input accuracy for noisy-input accuracy.
+
+**Why it is still only 0.22.** There are two distinct limits, and only the second turned out to be fixable.
+
+*The compatibility measure* is the first and the larger. Asking of every side whether its cheapest partner lies on a genuinely adjacent piece — a measure that needs no knowledge of any piece's rotation, so it isolates the matcher — gives a top-1 rate of **0.324** against **0.10** for chance, where the same measure reaches **0.90** on synthetic puzzles. Everything tried against it is recorded in `results/evaluation_results/`:
+
+| Attempt | Varied | Outcome |
+|---|---|---|
+| More search | restarts 1 to 60 | saturates at 4 |
+| Richer colour descriptor | 7 sampling-depth variants | best lifts best-buddy precision 0.52 → 0.57 but *lowers* reconstruction |
+| Wider alignment search | shift 0 % to 20 % of a side | the existing 5 % is the optimum; both directions worse |
+| Per-side cost normalisation | each side's row divided by its own 2nd-best / low quantile / z-score | top-1 0.343 → 0.381, reconstruction flat |
+| Beam search | width 20–150, top-3 to top-5 | no gain, and a regression on clean input |
+| Cluster merging (Kruskal-style) | commit the cheapest merges globally rather than growing from a seed | *worse* (0.173 vs 0.213) — the seeded greedy is not the weak link |
+| Removing non-puzzle objects | oracle: keep only the pieces matched to an annotation | **no change at all** (0.213 → 0.214) |
+| **MGC** (gradient continuity, §6.3) | Gallagher's Mahalanobis Gradient Compatibility | matcher +21 % (top-1 0.267 → 0.324); position accuracy +11 % |
+
+The pattern is consistent, and it is what establishes the diagnosis: every change that improves the *matcher* leaves the *reconstruction* nearly where it was. At a top-1 of ~0.3 no search recovers a 35-piece puzzle, and two of these rows rule out the obvious alternative explanations directly — a fundamentally different search strategy did worse, and *perfectly* removing every non-puzzle object from the frame changed nothing.
+
+*The border rule* was the second limit, and unlike the first it was a defect rather than a property of the data. The flat/tab/blank classifier gets a piece's flat count right on only **79.6 %** of pieces here (against ~100 % on synthetic puzzles), and only **52 %** of the true corner pieces are recognised as corners. The assembler nevertheless treated "a rim cell must show a flat outwards" as a *hard* filter, so on these photographs it rejected correct placements more often than it prevented wrong ones. Charging `BORDER_PENALTY` instead (§7.6) produced the 0.192 → 0.220 step above at no cost on clean input.
 
 Three properties of this particular puzzle account for it, and all three are properties of the data rather than of the algorithms:
 
@@ -434,20 +489,31 @@ The pipeline therefore segments, describes and assembles the dataset's pieces co
 
 ### 9.4 What would close the gap
 
-* **A discriminative descriptor.** The obvious classical candidate — gradient continuity, Gallagher's MGC — has now been implemented and measured (§6.3): it helps the matcher by a third and the reconstruction not at all. What remains untried is a descriptor with genuinely more information in it than a one-dimensional strip: patch-based normalised cross-correlation over a two-dimensional band either side of the seam, which would use the printed texture's spatial structure rather than a single line of it.
+* **A discriminative descriptor — but not a two-dimensional one.** The obvious classical candidate, gradient continuity (Gallagher's MGC, §6.3), has been implemented and measured: it helps the matcher by a fifth and the reconstruction slightly. The natural next step would be a descriptor carrying more than a one-dimensional strip — patch-based correlation over a two-dimensional band either side of the seam, using the printed texture's spatial structure rather than a single line of it. **That has now been measured too, and it does not work**: widening the strip along the side and deepening it into the piece both make the matcher *worse*, monotonically.
+
+  | Seam sampling | MGC top-1 | Best-buddy precision |
+  |---|---|---|
+  | 96 samples × 3 depths (the default) | **0.335** | **0.531** |
+  | 160 × 3 | 0.331 | 0.499 |
+  | 224 × 3 | 0.334 | 0.506 |
+  | 96 × 6 (2-D band) | 0.317 | 0.479 |
+  | 160 × 6 | 0.328 | 0.492 |
+  | 160 × 8 | 0.328 | 0.492 |
+
+  The interpretation is physical rather than algorithmic. The printed detail that a patch descriptor would exploit is 1–2 px wide at this resolution, and the two halves of a true seam were photographed at different angles and distances across the table, so they cannot be registered to that precision. Sampling more of the seam therefore adds misregistered detail, i.e. noise, faster than it adds signal. A patch descriptor would need the photographs rectified first, which is the next item.
 * **Photometric calibration.** Estimating and dividing out the illumination field across the table before describing pieces would remove the per-piece gain that normalisation only approximates.
 * **A stronger search**, but only *after* the measure improves. Beam search was implemented and measured here and did not help (see above); loopy belief propagation or hierarchical merging would tolerate a weaker measure better, but the evidence is that no search recovers information the measure never captured.
 
 ## 10. Testing
 
-The suite is 110 tests, one file per stage, run either with pytest or with the bundled pytest-free runner (`python tests/run_tests.py`).
+The suite is 144 tests, one file per stage, run either with pytest or with the bundled pytest-free runner (`python tests/run_tests.py`).
 
 | File | What it pins down |
 |---|---|
 | `test_enhancement.py` | convolution against a hand-computed sum; separable blur equals 2-D; the median deletes impulses where the Gaussian smears them; histograms count every pixel; equalisation flattens; stretching spans the range |
 | `test_thresholding.py` | Otsu really maximises between-class variance (brute-force check); adaptive mean equals the local box mean; adaptive beats global under an illumination ramp |
 | `test_edge_detection.py` | kernel algebra; a vertical edge gives a horizontal gradient; NMS thins a ridge to its crest; hysteresis keeps connected weak pixels and drops isolated ones; Canny outlines a rectangle without filling it |
-| `test_segmentation.py` | erosion/dilation sizes on a square; `majority_smooth` is self-dual; hole filling; 4- vs 8-connectivity on a diagonal; component statistics; the distance transform against brute force; the watershed splits two joined discs and leaves separate ones alone; Moore tracing walks a square exactly once; convex hull and minimum-area rectangle on a rotated rectangle |
+| `test_segmentation.py` | erosion/dilation sizes on a square; `majority_smooth` is self-dual; hole filling; 4- vs 8-connectivity on a diagonal; component statistics; the distance transform against brute force; the watershed splits two joined discs and leaves separate ones alone; Moore tracing walks a square exactly once; convex hull and minimum-area rectangle on a rotated rectangle; `reference_area` survives both a swarm of watershed slivers and a few oversized blobs, where a plain median follows the slivers (§4.5) |
 | `test_piece_description.py` | dominant orientation straightens a rectangle at any angle; corners form a usable quadrilateral always and an accurate one for ≥90 % of pieces; tab/blank/flat classification on analytic profiles; profiles are scale-invariant; a 3×4 puzzle yields exactly 4 + 6 + 2 pieces by flat count |
 | `test_edge_matching.py` | the admissibility truth table; the shape distance is zero for a perfect fit; shift tolerance absorbs a misalignment; illumination normalisation is invariant to gain and offset; the vectorised table matches the scalar formula entry by entry; the table is symmetric; best buddies really are mutual |
 | `test_assembly.py` | the grid fills with each piece used once; flats face outwards; rotated *and* unrotated puzzles reconstruct exactly; the dead-end path still places everything; restarts never return a worse arrangement; the reconstruction resembles the original and not an unrelated picture |
@@ -460,9 +526,9 @@ Every requirement of the brief is implemented from scratch and independently tes
 
 On the **provided dataset** the pipeline isolates the pieces reliably — recall 0.97 at precision 0.96 across all 50 full-scramble photographs, with the distance-transform watershed of §4.4 responsible for lifting that from 0.81 — and describes them correctly, recovering all 24 flat sides and all 4 corner pieces that a 5×7 grid must expose. It does **not** reconstruct the picture: the compatibility measure runs at roughly three times chance on these photographs, and §9.3 shows exactly why, on a mostly-white advert photographed piece by piece across a table. On **synthetic puzzles**, where the picture carries distinguishable content, the identical code solves six of seven perfectly, including both 35-piece cases.
 
-Four findings are worth carrying forward.
+Six findings are worth carrying forward.
 
-1. **The descriptor is where the difficulty lives, not the search.** Once corners came from the body-edge model and colour was sampled along the chord normal, a plain greedy search with best-buddy ordering solved every clean puzzle; and where the descriptor is weak, no search recovers it.
+1. **The descriptor is where the difficulty lives, not the search.** Once corners came from the body-edge model and colour was sampled along the chord normal, a plain greedy search with best-buddy ordering solved every clean puzzle; and where the descriptor is weak, no search recovers it. Two negative results in §9.3 make this concrete rather than rhetorical: replacing the seeded greedy with global cluster merging did *worse*, and removing every non-puzzle object from the frame with an oracle changed nothing at all.
 2. **Shape and colour are complementary but far from equal.** On a machine-cut puzzle colour alone reaches a 0.88 top-1 match rate and shape alone 0.08 — so a puzzle whose picture is uniform removes most of the available information, which is precisely the dataset's situation.
 3. **Complementarity is fragile.** Opening-then-closing, an asymmetric contour smoother, or a mis-placed corner each destroy the mirror relationship between a tab and its blank, and each silently reduced the shape term to noise until it was found.
 4. **The population is more informative than the piece.** Three of the largest improvements — repairing outlier corners against the median body size, calibrating the flat threshold against the `2(R+C)` flats a grid must have, and sizing the watershed split from the median piece area — come from treating the puzzle as one object cut by one tool rather than as a bag of independent samples.

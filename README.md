@@ -92,8 +92,45 @@ result.quality["quality"]  # numerical reconstruction quality in [0, 1]
 Rebuild the report after re-running the demos with
 `python report/build_report.py`.
 
-The `detection/` folder holds the dataset from the brief (a Roboflow YOLO
-export). It is read but never modified.
+---
+
+## Getting the dataset
+
+**The dataset is deliberately not committed.** The Roboflow YOLO export is
+~425 MB packed and ~453 MB extracted, and GitHub refuses any single file over
+100 MB, so a repository carrying it could not be pushed at all. `.gitignore`
+excludes `detection/` and `*.rar`.
+
+Everything the brief asks to be *submitted* — source, tests, results, figures
+and the report — is committed and needs nothing else. So that the headline
+demo still runs on **real photographs** in a fresh clone, eight of the
+photographs and their answer keys are committed too:
+
+```
+data/input/          8 full-scramble photographs (PNG, 1920x1080)
+data/ground_truth/   the answer key for each: every piece's true 5x7 cell
+data/sample_pieces/  8 individual pieces cropped by the segmentation stage
+```
+
+`python main.py` uses `detection/` when it is present and falls back to
+`data/` when it is not (`main.dataset_scenes`), so the only difference is
+that the study covers 8 photographs instead of 50.
+
+To run on the full 50, download the **YOLOv8 / YOLO-format export** of
+
+> <https://universe.roboflow.com/hobby-projs/puzzle-vrkx6-9xh3l/dataset/1>
+
+and unpack it into `detection/` so that the layout is:
+
+```
+detection/
+├── data.yaml
+├── images/{train,valid,test}/*.jpg
+└── labels/{train,valid,test}/*.txt
+```
+
+then `python main.py --run data` refreshes `data/` from it. The folder is read
+and never modified.
 
 ---
 
@@ -103,6 +140,7 @@ export). It is read but never modified.
 
 | Requirement | Implementation |
 |---|---|
+| Mean (box) noise reduction | `mean_filter(size)`, the unweighted neighbourhood average. Separable like the Gaussian, so also two 1-D passes. Kept as the baseline: a flat kernel turns a step into a piecewise-linear ramp with hard corners, which is what the Gaussian avoids. |
 | Gaussian noise reduction, kernel from size **and** σ | `gaussian_kernel_1d(size, sigma)` samples `exp(-x²/2σ²)` and normalises; size defaults to `2⌈3σ⌉+1`. `gaussian_blur` runs two separable 1-D passes (`O(k)` instead of `O(k²)` per pixel). |
 | Median filtering, **loop justified** | `median_filter`. The median is a *rank* statistic — not a linear operator, so it has no convolutional or separable form and every output pixel genuinely needs its own window's order statistics. Rather than a per-pixel Python loop, all windows are materialised at once through a stride-trick view and one vectorised `np.median` performs the `H·W` selections in compiled code; the image is processed in stripes to bound memory. The only Python loop left is over the (≤3) colour channels. |
 | Contrast: histogram equalisation, contrast stretching, **histogram computed by the library** | `histogram` / `cumulative_histogram` are used by both. Equalisation maps intensities through the normalised CDF; stretching reads its two percentiles off that same CDF (not `np.percentile`). |
@@ -331,18 +369,17 @@ Scored against the annotated boxes, over all **50** full-scramble photographs
 
 | Measure | Value |
 |---|---|
-| Piece recall (annotated pieces isolated) | **0.943** |
-| Piece precision (components that are pieces) | **0.939** |
-| F1 | 0.933 |
-| Recall = 1.00 (every piece found) | **38 / 50** images |
-| Pieces isolated | 35.1 / 35 on average |
-| Flat sides found | **24.7** vs 24 the 5x7 grid must expose |
-| Corner pieces found | 3.3 / 4 |
-| Time per photograph | 28 s at native 1920x1080 |
+| Piece recall (annotated pieces isolated) | **0.973** |
+| Piece precision (components that are pieces) | **0.963** |
+| F1 | 0.965 |
+| Pieces isolated | 35.4 / 35 on average |
+| Flat sides found | **23.1** vs 24 the 5x7 grid must expose |
+| Corner pieces found | 3.2 / 4 |
+| Time per photograph | 32 s at native 1920x1080 |
 
 Splitting touching pieces is what makes this work: without it recall is
 **0.81**, with it **0.94** (and 0.97 at the reduced 1280 px working size used
-for the segmentation-only study). Description is essentially correct — 24.7
+for the segmentation-only study). Description is essentially correct — 23.1
 flat sides found against 24 expected — so the pieces, their corners, their
 sides and their types are all recovered from real photographs.
 
@@ -351,37 +388,65 @@ section:
 
 | Measure | Real photographs | Synthetic (for contrast) |
 |---|---|---|
-| Neighbour accuracy | **0.192** | 0.970 |
-| Position accuracy | **0.119** | 0.989 |
-| Reference-free quality | 0.126 | 0.47-0.53 |
-| Best single image | 0.417 neighbour | 1.000 |
+| Neighbour accuracy | **0.220** | 0.970 |
+| Position accuracy | **0.131** | 0.989 |
+| Matcher top-1 | 0.324 | 0.90 |
+| Best single image | 0.328 neighbour | 1.000 |
 
 **The reconstruction does not succeed on this dataset.** Roughly one adjacency
 in five is right, against about one in twenty by chance -- a real signal, but
 nowhere near a solved puzzle. That is the honest result, and the cause is
 identifiable rather than mysterious.
 
-**Why.** The bottleneck is the compatibility measure, not the search. Asking
-of every side whether its cheapest partner lies on a genuinely adjacent piece
--- which needs no knowledge of any rotation, so it isolates the matcher --
-gives a top-1 rate of **0.25** against **0.09** for chance, where the same
-measure reaches **0.90** on synthetic puzzles.
+The numbers above are with the photograph preset (`main.DATASET_SOLVER`);
+the two settings that separate it from the library defaults were each
+measured over all 50 answer-keyed photographs, from cached descriptors so
+that only the stage under test varies:
 
-Three attempts to close the gap all failed, which is what establishes that the
-measure rather than the machinery is the limit:
+| Configuration | Matcher top-1 | Neighbour acc. | Position acc. |
+|---|---|---|---|
+| colour SSD, hard border rule | 0.267 | 0.189 | 0.119 |
+| **+ MGC** photometric term | 0.324 | 0.192 | 0.132 |
+| **+ soft border rule** (the preset) | 0.324 | **0.220** | **0.131** |
+
+Both changes are real but small: +16 % neighbour accuracy overall, better on
+26 of the 50 photographs and worse on 18. The synthetic puzzles stay at 100 %
+under the same settings, so neither is a trade of clean-input accuracy for
+noisy-input accuracy.
+
+**Why it is still only 0.22.** There are two distinct limits, and only the
+second turned out to be fixable.
+
+*The compatibility measure.* Asking of every side whether its cheapest partner
+lies on a genuinely adjacent piece -- which needs no knowledge of any
+rotation, so it isolates the matcher -- gives a top-1 rate of **0.324** against
+**0.10** for chance, where the same measure reaches **0.90** on synthetic
+puzzles. Attempts to close that gap:
 
 | Attempt | Varied | Outcome |
 |---|---|---|
 | More search | restarts 1 to 60 | saturates at 4 |
-| Richer colour descriptor | 5 depth/normalisation variants | all plateau at 0.24-0.26 |
-| Wider alignment search | shift 5% to 18% of a side | monotonically worse |
+| Richer colour descriptor | 7 sampling-depth variants | best raises best-buddy precision 0.52 to 0.57, but *lowers* reconstruction |
+| Wider alignment search | shift 0 % to 20 % of a side | optimum is the existing 5 %; both directions worse |
+| Per-side cost normalisation | divide each side's row by its own 2nd-best / low quantile / z-score | top-1 0.343 to 0.381, reconstruction flat |
 | Beam search | width 20-150, top-3 to top-5 | no gain on real photos, and a regression on clean input |
-| **MGC** (gradient continuity) | Gallagher's Mahalanobis gradient compatibility | **matcher +36%** (top-1 0.203 to 0.276), reconstruction unchanged (0.179 to 0.194) |
+| Cluster merging (Kruskal-style) | commit cheapest merges globally instead of growing from a seed | *worse* (0.173 vs 0.213), so the seeded greedy is not the weak link |
+| Removing non-puzzle objects | oracle: keep only pieces matched to an annotation | **no change at all** (0.213 to 0.214) |
+| **MGC** (gradient continuity) | Gallagher's Mahalanobis gradient compatibility | matcher +21 % (top-1 0.267 to 0.324); reconstruction +11 % on position accuracy |
 
-The MGC result is the most informative: it is the strongest classical
-photometric measure available, it does extract more signal than colour SSD
-exactly as the literature predicts, and the reconstruction still does not
-move. The shortfall is one of degree in the input, not the wrong method.
+The pattern is consistent: every change that improves the *matcher* leaves the
+*reconstruction* nearly where it was. At a top-1 of ~0.3, no search recovers a
+35-piece puzzle, and the measure is the reason.
+
+*The border rule.* The second limit was a genuine defect rather than a
+property of the data. The flat/tab/blank classifier gets a piece's flat count
+right on only **79.6 %** of pieces here (against ~100 % on synthetic puzzles),
+and only **52 %** of the true corner pieces are recognised as corners. The
+assembler was treating "a rim cell must show a flat outwards" as a *hard*
+filter, so on these photographs it rejected correct placements more often than
+it prevented wrong ones. Charging `BORDER_PENALTY` instead
+(`assemble(border_mode="soft")`) is what produced the 0.192 to 0.220 step
+above, and costs nothing on clean input.
 
 Three properties of this particular puzzle explain it, all properties of the
 data rather than of the algorithms:
@@ -470,7 +535,7 @@ Three failures that shaped the implementation, all visible in the tests:
 
 ## Testing
 
-108 tests, one file per stage plus the end-to-end routine:
+144 tests, one file per stage plus the end-to-end routine:
 
 ```
 tests/test_enhancement.py        primitives, filters, histograms, sharpening

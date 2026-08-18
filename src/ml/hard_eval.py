@@ -59,10 +59,20 @@ DATASET_GRID = (5, 7)
 #:
 #: The classical baseline must be compared in the configuration its own
 #: milestone runs, or the comparison measures the configuration rather than
-#: the method.  Generated puzzles are lit uniformly by construction and take
-#: the Milestone 1 default (``colour_norm="none"``), which is why this is
-#: applied to the photographs only.
-REAL_PHOTO_MATCHER = {"colour_norm": "meanstd"}
+#: the method.  These are exactly ``main.DATASET_SOLVER``'s matcher settings:
+#: ``colour_metric="mgc"`` as well, because Gallagher's gradient
+#: compatibility asks whether the picture *continues* rather than whether the
+#: colours agree, which is the right question for a puzzle photographed piece
+#: by piece.  Generated puzzles are lit uniformly by construction and take the
+#: Milestone 1 defaults, which is why this is applied to the photographs only.
+REAL_PHOTO_MATCHER = {"colour_norm": "meanstd", "colour_metric": "mgc"}
+
+#: Assembly settings for the photographs, again matching ``DATASET_SOLVER``.
+#: The flat/tab/blank classification is only ~80 % correct on real pieces, so
+#: the border rule is charged as a penalty rather than enforced as a filter
+#: (report section 7.6).  This applies to *every* method equally -- it is a
+#: property of the search, not of the matcher under test.
+REAL_PHOTO_ASSEMBLY = {"border_mode": "soft"}
 
 
 def low_texture_source(height: int, width: int, seed: int,
@@ -294,7 +304,7 @@ def evaluate_on_real_photographs(siamese, gnn, detection_dir: str,
         for name, fn in methods:
             t0 = time.perf_counter()
             table = fn(sample)
-            asm = assemble(descs, table, DATASET_GRID)
+            asm = assemble(descs, table, DATASET_GRID, **REAL_PHOTO_ASSEMBLY)
             rows_out[name].append({
                 "neighbour_accuracy": ev.neighbour_accuracy_from_cells(
                     asm, cells)["neighbour_accuracy"],

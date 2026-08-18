@@ -153,7 +153,8 @@ def texture_chart(sweep: dict, path: str) -> str:
 # --------------------------------------------------------------------------
 def reconstruction_panel(sample, path: str, siamese=None, gnn=None,
                          tables: dict | None = None, title: str | None = None,
-                         cells: dict | None = None) -> dict:
+                         cells: dict | None = None,
+                         assembly_kwargs: dict | None = None) -> dict:
     """Draw each method's reconstruction of one puzzle side by side.
 
     Returns the measured accuracy per method so the caller can log it; the
@@ -166,7 +167,8 @@ def reconstruction_panel(sample, path: str, siamese=None, gnn=None,
 
     images, captions, scores = [], [], {}
     for m in names:
-        asm = assemble(sample.descriptions, tables[m], sample.grid_shape)
+        asm = assemble(sample.descriptions, tables[m], sample.grid_shape,
+                       **(assembly_kwargs or {}))
         images.append(render_assembly(sample.descriptions, asm))
         nbr = ev.neighbour_accuracy_from_cells(asm, cells)["neighbour_accuracy"]
         pos = ev.position_accuracy_from_cells(asm, cells)["position_accuracy"]
@@ -196,7 +198,8 @@ def real_photograph_panels(siamese, gnn, detection_dir: str, out_dir: str,
     """
     import time
 
-    from .hard_eval import build_real_sample, real_scenes
+    from .hard_eval import (REAL_PHOTO_ASSEMBLY, build_real_sample,
+                            real_scenes)
 
     out = []
     for img_path, lab_path in real_scenes(detection_dir, limit):
@@ -211,7 +214,8 @@ def real_photograph_panels(siamese, gnn, detection_dir: str, out_dir: str,
         path = os.path.join(out_dir, f"real_{stem}.png")
         scores = reconstruction_panel(
             sample, path, siamese=siamese, gnn=gnn,
-            title=f"Dataset photograph - {os.path.basename(img_path)}")
+            title=f"Dataset photograph - {os.path.basename(img_path)}",
+            assembly_kwargs=REAL_PHOTO_ASSEMBLY)
         out.append({"figure": path, "photograph": os.path.basename(img_path),
                     "scores": scores})
         if verbose:

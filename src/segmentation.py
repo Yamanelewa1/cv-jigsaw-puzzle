@@ -40,6 +40,7 @@ __all__ = [
     "split_touching",
     "ComponentStats",
     "component_stats",
+    "reference_area",
     "filter_components",
 ]
 
@@ -335,22 +336,15 @@ def connected_components(mask: np.ndarray, connectivity: int = 8):
     """Label the connected foreground regions of a boolean mask.
 
     Classic **two-pass algorithm with union-find**, applied to *runs* rather
-    than to individual pixels:
+    than pixels.  First pass: each row is split into maximal horizontal runs
+    (one vectorised ``diff``) and given a provisional label; overlapping runs
+    in consecutive rows are ``union``-ed, the overlap test widened by a pixel
+    each side for 8-connectivity.  Second pass: each label becomes the root of
+    its class, roots are renumbered ``1..n``, and the runs are painted.
 
-    1. *First pass* -- each row is decomposed into maximal horizontal runs of
-       foreground pixels (found with one vectorised ``diff``).  Every run
-       receives a provisional label.  Runs in consecutive rows that overlap
-       are neighbours, so their labels are ``union``-ed; with
-       8-connectivity the overlap test is widened by one pixel on each side
-       so that diagonal contacts count.
-    2. *Second pass* -- every provisional label is replaced by the root of
-       its equivalence class, the roots are renumbered ``1..n``, and the runs
-       are painted into the output image.
-
-    Working on runs instead of pixels leaves only ``O(number of runs)`` work
-    in Python (a few thousand for a typical mask) while producing exactly the
-    same labelling as the textbook pixel-wise scan.  Union-find uses path
-    compression, so the pass is effectively linear.
+    Working on runs leaves only ``O(runs)`` work in Python -- a few thousand
+    for a typical mask -- while producing exactly the labelling of the
+    textbook pixel-wise scan.  Path compression makes it effectively linear.
 
     Returns ``(labels, count)`` where ``labels`` is int32, background = 0.
     """
@@ -514,17 +508,16 @@ def split_touching(labels: np.ndarray, target_area: float | None = None,
     intensity.  The classical answer is a watershed on the distance
     transform, and that is what this is:
 
-    1. a component whose area is at least ``min_ratio`` times the expected
-       piece area is assumed to hold ``round(area / target_area)`` pieces;
+    1. a component at least ``min_ratio`` times the expected piece area is
+       assumed to hold ``round(area / target_area)`` pieces;
     2. its distance transform is smoothed and thresholded, sweeping the level
-       from high to low and keeping the **highest** level at which exactly
-       that many substantial cores survive -- a high level keeps only the
-       "thick" middle of each piece and drops the narrow isthmus where two
-       pieces touch.  The smoothing matters: the tip of a tab is a local
-       maximum of the raw distance map too, and without it the sweep counts
-       tabs as pieces.  Cores below ``min_core`` of the blob are discarded
-       for the same reason;
-    3. the surviving cores are grown back over the blob at equal speed
+       high to low and keeping the **highest** level at which exactly that
+       many substantial cores survive -- a high level keeps only the thick
+       middle of each piece and drops the narrow isthmus where two touch.
+       The smoothing matters: a tab tip is a local maximum of the raw distance
+       map too, and without it the sweep counts tabs as pieces.  Cores below
+       ``min_core`` of the blob go for the same reason;
+    3. the cores are grown back over the blob at equal speed
        (:func:`_grow_markers`), so they meet on the watershed line.
 
     ``target_area`` defaults to the median component area, which is the
@@ -658,6 +651,40 @@ def component_stats(labels: np.ndarray) -> list[ComponentStats]:
     return out
 
 
+#: A component smaller than this fraction of the *upper* end of the area
+#: distribution is watershed debris, not a piece.
+_SLIVER_FRACTION = 0.10
+#: Percentile standing in for "the size of a large component".  Not the
+#: maximum: one unresolved blob of four merged pieces would then set the scale
+#: and the cut would delete the real pieces along with the debris.
+_UPPER_PERCENTILE = 90.0
+
+
+def reference_area(areas: np.ndarray) -> float:
+    """A robust estimate of "the area of one puzzle piece".
+
+    Drops the obvious debris, then takes the plain median of what is left.
+    Debris is measured against the *upper* end of the distribution (below
+    ``_SLIVER_FRACTION`` of the ``_UPPER_PERCENTILE``-th percentile) because
+    the median is the very statistic the debris corrupts.
+
+    Two failure modes pull in opposite directions, so neither a plain nor an
+    area-weighted median survives both: a swarm of watershed slivers can
+    outnumber the pieces and drag a plain median *down*, while a few blobs of
+    merged pieces would drag an area-weighted one *up*.  Reduces to the plain
+    median when every component is already about the same size.  Report §4.5.
+    """
+    a = np.asarray(areas, dtype=np.float64)
+    a = a[a > 0]
+    if a.size == 0:
+        return 0.0
+    upper = float(np.percentile(a, _UPPER_PERCENTILE))
+    keep = a >= _SLIVER_FRACTION * upper
+    if keep.any():
+        a = a[keep]
+    return float(np.median(a))
+
+
 def filter_components(labels: np.ndarray, min_area: int = 0,
                       max_area: int | None = None,
                       min_area_ratio: float | None = 0.25,
@@ -666,25 +693,34 @@ def filter_components(labels: np.ndarray, min_area: int = 0,
                       relabel: bool = True):
     """Keep only components that look like puzzle pieces.
 
-    ``min_area_ratio`` and ``max_area_ratio`` are expressed relative to the
-    **median** component area, which is the robust way to reject clutter
-    (bolts, cable ties, cloth folds) in the dataset photographs without
-    hard-coding a pixel count.  The upper bound is useful after
-    :func:`split_touching`, where anything still much larger than a piece is
-    a blob the splitter could not resolve.  Returns ``(labels, stats)``.
+    ``min_area_ratio`` and ``max_area_ratio`` are expressed relative to a
+    reference "piece area", which is the robust way to reject clutter (bolts,
+    cable ties, cloth folds) in the dataset photographs without hard-coding a
+    pixel count.  The upper bound is useful after :func:`split_touching`,
+    where anything still much larger than a piece is a blob the splitter could
+    not resolve.  Returns ``(labels, stats)``.
+
+    The reference is a **median refined by re-estimation**
+    (:func:`reference_area`) rather than the plain median of the component
+    areas.  The plain median is the obvious choice and is what this used to
+    do, but it counts components, so a handful of real pieces can be
+    outvoted by a swarm of slivers that :func:`split_touching` sheds along a
+    watershed line.  On one dataset photograph that dragged the reference
+    from ~7700 px down to ~4700 px, the ``[0.45, 1.7]`` window then landed
+    between the slivers and the pieces, and only 3 of 35 pieces survived.
     """
     stats = component_stats(labels)
     if not stats:
         return labels, stats
 
     areas = np.array([s.area for s in stats], dtype=np.float64)
-    median = float(np.median(areas)) if areas.size else 0.0
+    reference = reference_area(areas)
     lo = float(min_area)
     if min_area_ratio is not None and areas.size:
-        lo = max(lo, median * float(min_area_ratio))
+        lo = max(lo, reference * float(min_area_ratio))
     hi = float(max_area) if max_area is not None else np.inf
     if max_area_ratio is not None and areas.size:
-        hi = min(hi, median * float(max_area_ratio))
+        hi = min(hi, reference * float(max_area_ratio))
 
     keep_ids = []
     for s, a in zip(stats, areas):

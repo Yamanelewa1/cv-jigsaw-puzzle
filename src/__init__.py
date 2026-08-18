@@ -127,6 +127,7 @@ class PuzzleSolver:
                  colour_norm: str = "none",
                  colour_metric: str = "ssd",
                  depths: tuple = (2.0, 4.0, 6.0),
+                 border_mode: str = "hard",
                  verbose: bool = False):
         self.enhance = enhance
         self.median_size = median_size
@@ -144,6 +145,7 @@ class PuzzleSolver:
         self.colour_norm = colour_norm
         self.colour_metric = colour_metric
         self.depths = tuple(depths)
+        self.border_mode = border_mode
         self.verbose = verbose
 
     # ------------------------------------------------------------------
@@ -226,7 +228,8 @@ class PuzzleSolver:
         t = time.perf_counter()
         res.grid_shape = grid_shape or infer_grid_shape(res.descriptions)
         res.assembly = assemble(res.descriptions, res.table, res.grid_shape,
-                                verbose=self.verbose)
+                                verbose=self.verbose,
+                                border_mode=self.border_mode)
         res.grid_shape = res.assembly.grid_shape
         timings["assembly"] = time.perf_counter() - t
 

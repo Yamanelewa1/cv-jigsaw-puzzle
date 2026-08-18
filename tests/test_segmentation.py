@@ -168,6 +168,43 @@ def test_filter_components_upper_area_bound():
     assert len(stats) == 2
 
 
+def test_reference_area_is_the_plain_median_on_uniform_input():
+    areas = np.array([980.0, 1000.0, 1020.0, 1000.0])
+    assert abs(seg.reference_area(areas) - 1000.0) < 1e-9
+
+
+def test_reference_area_ignores_a_swarm_of_slivers():
+    """A watershed can shed more slivers than there are pieces.
+
+    The slivers then outnumber the pieces, so a plain median follows them
+    instead of the pieces.  ``reference_area`` must still report the piece
+    size -- this is the failure that left 3 of 35 pieces on one dataset
+    photograph.
+    """
+    areas = np.array([7700.0] * 35 + [150.0] * 60)
+    assert abs(np.median(areas) - 150.0) < 1e-9          # the plain median fails
+    assert abs(seg.reference_area(areas) - 7700.0) < 1e-9
+
+
+def test_reference_area_is_not_dragged_up_by_oversized_blobs():
+    """Unresolved merged pieces are huge but few; they must not win either."""
+    areas = np.array([1000.0] * 20 + [9000.0] * 3)
+    assert abs(seg.reference_area(areas) - 1000.0) < 1e-9
+
+
+def test_filter_components_survives_sliver_debris():
+    """End to end: two real squares plus sliver debris keeps both squares."""
+    m = np.zeros((80, 200), dtype=bool)
+    m[5:25, 5:25] = True                       # a piece
+    m[5:25, 35:55] = True                      # a piece
+    for k in range(12):                        # debris, 2x2 each
+        m[70:72, 4 * k:4 * k + 2] = True
+    labels, _ = seg.connected_components(m)
+    _, stats = seg.filter_components(labels, min_area_ratio=0.45,
+                                     max_area_ratio=1.7)
+    assert len(stats) == 2
+
+
 def test_component_stats_area_bbox_and_centroid():
     m = np.zeros((12, 12), dtype=bool)
     m[3:7, 4:9] = True

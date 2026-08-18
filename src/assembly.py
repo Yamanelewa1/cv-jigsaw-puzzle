@@ -1,71 +1,55 @@
 """Milestone 1 / task 6 -- Greedy best-first puzzle assembly.
 
-The compatibility table of :mod:`src.edge_matching` is turned into an actual
+The compatibility table of :mod:`src.edge_matching` is turned into an
 arrangement by a greedy best-first search over a fixed ``R x C`` grid.
 
 Algorithm
 ---------
-1. **Seed.**  The grid is anchored with a *corner* piece (two adjacent flat
-   sides) placed at cell ``(0, 0)``, rotated so that its two flats face North
-   and West.  If the piece descriptions contain no corner piece (a puzzle
-   without a border, or a failed flat classification), the seed is the piece
-   of the most confident seam, placed at the centre of the grid.  The whole
-   pass is repeated from every such seed (see *Restarts* below).
-2. **Frontier.**  Every empty cell that touches at least one placed piece is
-   a candidate.  For each such cell, every unused piece and each of its four
-   rotations is scored by
+1. **Seed** the grid with a *corner* piece (two adjacent flats) at ``(0, 0)``,
+   turned so its flats face North and West.  With no corner piece available,
+   seed from the most confident seam at the centre instead.
+2. **Frontier**: every empty cell touching a placed piece.  For each, every
+   unused piece in each of its four rotations is scored by the mean ``D``
+   across its already-placed neighbours, and rejected if a hard constraint
+   is violated.
+3. **Commit** the best ``(cell, piece, rotation)`` and repeat until full.
 
-       ``cost(cell, piece, rot) = sum over placed neighbours of
-                                  D(side of neighbour, facing side of piece)``
-
-   normalised by the number of matched neighbours, and rejected outright if
-   any hard constraint is violated (a border cell must show a flat side, an
-   interior seam may not, and every seam must be an admissible tab/blank
-   pair).
-3. **Selection.**  The best admissible ``(cell, piece, rotation)`` is
-   committed and the frontier is updated, until the grid is full.
-
-Tie-breaking rule
------------------
 Candidates are compared on the tuple
 
-    ``(not a best-buddy seam, mean seam cost, -number of matched neighbours,
+    ``(not a best-buddy seam, mean seam cost, -matched neighbours,
        -confidence margin, piece index, rotation)``
 
-in that order.  *Best-buddy* seams -- where the two sides are each other's
-cheapest partner in the entire puzzle (:func:`_best_buddy_set`) -- are
-committed first, because a mutual first choice is far stronger evidence than
-a merely cheap one and stops the walk from spending an irreplaceable piece on
-a locally attractive but wrong cell.  Then the cheapest mean seam cost; then
-the placement constrained by *more* already-placed neighbours (more
-evidence); then the larger *margin* to the second-best piece for the same
-cell (a uniquely good placement is safer than one where two pieces tie); the
-last two entries make the result deterministic.
+*Best-buddy* seams -- where the two sides are each other's cheapest partner
+in the whole puzzle -- go first, because a mutual first choice is far stronger
+evidence than a merely cheap one.  Then cheapest cost; then the cell with more
+placed neighbours (more evidence); then the larger margin to the runner-up;
+the last two only to make the result deterministic.
 
-Restarts
---------
-One greedy walk is only as good as its first few decisions, so the pass is
-run once per candidate seed and the best arrangement is kept, ranked by
-``(pieces placed, forced placements, mean seam cost)``.
-
-Rendering
----------
-Once the arrangement is known, :func:`render_assembly` draws it back into a
-single image: each piece is mapped onto its grid cell with the similarity
-transform (rotation + uniform scale + translation) that sends the two corners
-of its North-facing side onto the two top corners of the cell.  Two point
-correspondences determine a similarity exactly, and because the cut is
-complementary the tabs land precisely in the neighbours' blanks.
+Because one greedy walk is only as good as its first few decisions, the pass
+is repeated from every candidate seed and the best arrangement kept, ranked by
+``(pieces placed, forced placements, mean seam cost)``.  A better result is
+never discarded, so :func:`assemble` **always** returns the best arrangement
+it obtained, complete or not.
 
 Dead ends
 ---------
-If no candidate satisfies the hard constraints, the search does not abort.
-It relaxes them in three documented stages -- (i) drop the border/flat
-requirement, (ii) allow tab-tab and blank-blank seams at a fixed penalty
-``DEADEND_PENALTY``, (iii) place the remaining pieces in reading order --
-and records which placements were forced.  Because the best arrangement seen
-so far is stored at every step, :func:`assemble` **always** returns the best
-arrangement it obtained, complete or not.
+If nothing satisfies the hard constraints the search relaxes them in stages --
+(i) drop the border/flat rule, (ii) allow tab-tab and blank-blank seams at
+``DEADEND_PENALTY``, (iii) place whatever is left in reading order -- and
+records which placements were forced.  A placement counts as forced when it
+actually had to break a rule, not merely because it was scored in a relaxed
+stage.
+
+``border_mode`` chooses how the border rule ("a rim cell shows a flat
+outwards, an interior cell does not") enters the search: ``"hard"`` makes
+stage (i) a filter, correct when the flat classification can be trusted;
+``"soft"`` charges ``BORDER_PENALTY`` instead, which is right on the dataset
+photographs where that classification is only ~80 % correct.  See report
+section 7.6.
+
+:func:`render_assembly` then draws the result, mapping each piece onto its
+cell with the least-squares similarity transform that sends its four corners
+onto the cell's four corners.
 """
 
 from __future__ import annotations
@@ -219,16 +203,23 @@ def _side_type(descs, piece: int, rot: int, direction: str) -> str:
 
 
 def _corner_seeds(descs) -> list[tuple[int, int]]:
-    """Every ``(piece, rotation)`` that puts a corner piece's flats N and W."""
+    """Every ``(piece, rotation)`` that puts a corner piece's flats N and W.
+
+    ``piece`` is the *position* of the description in ``descs``, which is how
+    the compatibility table and every other routine here address a piece.  It
+    is deliberately not ``d.index`` (the label the segmentation gave the
+    component): the two coincide only when the caller passes the full,
+    unfiltered list of descriptions in order.
+    """
     out = []
-    for d in descs:
+    for k, d in enumerate(descs):
         flags = [s.is_flat for s in d.sides]
         if sum(flags) != 2:
             continue
         for i in range(4):
             # sides i (N) and i+3 (W) must both be flat
             if flags[i] and flags[(i + 3) % 4]:
-                out.append((d.index, i))
+                out.append((k, i))
     return out
 
 
@@ -256,8 +247,13 @@ def _best_buddy_set(table: CompatibilityTable) -> set:
 
 
 def _greedy_once(descs, table, rows, cols, seed_piece, seed_rot, seed_cell,
-                 buddies, verbose=False) -> Assembly:
-    """One greedy best-first pass from a fixed seed."""
+                 buddies, verbose=False, border_mode: str = "hard") -> Assembly:
+    """One greedy best-first pass from a fixed seed.
+
+    ``border_mode`` decides how the border rule ("a cell on the rim of the
+    grid must show a flat side outwards, an interior cell must not") enters
+    the search -- see :func:`assemble`.
+    """
     n = len(descs)
     grid: list[list[Placement | None]] = [[None] * cols for _ in range(rows)]
     used = np.zeros(n, dtype=bool)
@@ -294,9 +290,11 @@ def _greedy_once(descs, table, rows, cols, seed_piece, seed_rot, seed_cell,
             break
 
         # relaxation stages: 0 = all constraints, 1 = ignore border/flat
-        # rule, 2 = also allow illegal tab/blank pairs
+        # rule, 2 = also allow illegal tab/blank pairs.  In "soft" border mode
+        # stage 0 is skipped, so a border violation is only ever charged as a
+        # penalty and never rejects a candidate outright.
         chosen = None
-        for stage in (0, 1, 2):
+        for stage in ((0, 1, 2) if border_mode == "hard" else (1, 2)):
             best_per_cell = {}
             for (r, c) in cells:
                 nbrs = neighbours_of(r, c)
@@ -325,7 +323,7 @@ def _greedy_once(descs, table, rows, cols, seed_piece, seed_rot, seed_cell,
                         if not ok:
                             continue
                         # seam costs
-                        acc, k, bb = 0.0, 0, False
+                        acc, k, bb, illegal = 0.0, 0, False, False
                         for d, placed in nbrs:
                             cs = _seam_cost(table, placed, d, j, rot)
                             if not np.isfinite(cs):
@@ -333,6 +331,7 @@ def _greedy_once(descs, table, rows, cols, seed_piece, seed_rot, seed_cell,
                                     ok = False
                                     break
                                 cs = DEADEND_PENALTY
+                                illegal = True
                             s_placed = (placed.rotation
                                         + DIRECTIONS.index(_OPPOSITE[d])) % 4
                             t_cand = (rot + DIRECTIONS.index(d)) % 4
@@ -342,7 +341,11 @@ def _greedy_once(descs, table, rows, cols, seed_piece, seed_rot, seed_cell,
                             k += 1
                         if not ok or k == 0:
                             continue
-                        scored.append((cost + acc / k, k, bb, j, rot))
+                        # A placement is "forced" when it actually had to break
+                        # a rule, not merely because it was scored in a relaxed
+                        # stage -- in soft border mode every stage is relaxed.
+                        scored.append((cost + acc / k, k, bb, j, rot,
+                                       cost > 0.0 or illegal))
                 if scored:
                     scored.sort(key=lambda e: e[0])
                     margin = (scored[1][0] - scored[0][0]) if len(scored) > 1 else 1e3
@@ -363,13 +366,13 @@ def _greedy_once(descs, table, rows, cols, seed_piece, seed_rot, seed_cell,
 
         if chosen is None:
             break
-        (r, c), (cost, k, bb, j, rot), margin, stage = chosen
+        (r, c), (cost, k, bb, j, rot, broke_rule), margin, stage = chosen
         grid[r][c] = Placement(piece=j, rotation=rot, cost=float(cost),
-                               forced=stage > 0)
+                               forced=bool(broke_rule))
         used[j] = True
         total += float(cost)
         seam_costs.append(float(cost))
-        if stage > 0:
+        if broke_rule:
             forced += 1
         if verbose:
             log.append(f"place piece {j} rot {rot} at ({r},{c}) "
@@ -411,7 +414,8 @@ def _arrangement_key(a: Assembly):
 
 def assemble(descriptions: list[PieceDescription], table: CompatibilityTable,
              grid_shape: tuple[int, int] | None = None,
-             max_restarts: int = 8, verbose: bool = False) -> Assembly:
+             max_restarts: int = 8, verbose: bool = False,
+             border_mode: str = "hard") -> Assembly:
     """Greedy best-first reconstruction.  See the module docstring.
 
     The greedy pass is repeated from several seeds -- every corner piece in
@@ -461,7 +465,7 @@ def assemble(descriptions: list[PieceDescription], table: CompatibilityTable,
     best: Assembly | None = None
     for (p, r0, cell) in seeds:
         cand = _greedy_once(descs, table, rows, cols, p, r0, cell, buddies,
-                            verbose=verbose)
+                            verbose=verbose, border_mode=border_mode)
         if best is None or _arrangement_key(cand) < _arrangement_key(best):
             best = cand
     assert best is not None

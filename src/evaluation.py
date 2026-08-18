@@ -513,6 +513,34 @@ def _gt_grid(_pieces, gt, assoc) -> dict[tuple[int, int], int]:
     return out
 
 
+def _gt_cells(gt, assoc) -> dict[int, tuple[int, int]]:
+    """``piece index -> (row, col)`` from the synthetic ground truth.
+
+    The bridge between the two ground-truth representations this module has
+    to score against: the synthetic generator records a placement per piece,
+    while the dataset photographs yield a plain ``piece -> cell`` map (§9.1).
+    Converting once here means every metric below has a single
+    implementation, taking the plain map.
+    """
+    return {i: (int(gt.placements[g][0]), int(gt.placements[g][1]))
+            for i, g in enumerate(assoc)}
+
+
+def _gt_rotations(descriptions, gt, assoc) -> dict[int, int]:
+    """``piece index -> the side that faced North`` in the finished picture.
+
+    Same convention as :attr:`src.assembly.Placement.rotation`, so the two are
+    directly comparable.
+    """
+    out = {}
+    for i, g in enumerate(assoc):
+        if i >= len(descriptions):
+            continue
+        dirs = gt_side_directions(descriptions[i], gt.placements[g][2])
+        out[i] = dirs.index("N")
+    return out
+
+
 def _rotate_grid(grid: dict, rows: int, cols: int, k: int):
     """Rotate a ``(r, c) -> value`` map by ``k`` quarter turns clockwise."""
     out = dict(grid)
@@ -538,42 +566,50 @@ def _orientation_offsets(assembly, descriptions, gt, assoc) -> dict:
     return out
 
 
-def direct_accuracy(assembly, descriptions, gt, assoc) -> dict:
-    """Fraction of pieces in the correct cell (and with correct rotation).
+def _position_scan(assembly, cells: dict, grid_shape=None):
+    """``(best_k, correct_pieces)`` over the four global quarter turns.
 
-    Maximised over the four global rotations of the reconstructed grid: a
-    puzzle assembled rotated as a whole is still correctly assembled, and
-    nothing in the input tells the algorithm which way is up.  For the
-    combined position+rotation figure, the *same* global quarter-turn offset
-    must hold for every counted piece; the offset that satisfies the most
-    pieces is used.
+    A puzzle assembled as a whole turned by 90 degrees is still correctly
+    assembled -- nothing in the input says which way is up -- so every metric
+    that scores *position* maximises over the four turns.  This is that shared
+    scan; ``grid_shape``, when given, rejects the turns that would not produce
+    a grid of the expected shape (on a 5x7 puzzle only 0 and 180 degrees can).
     """
     rows, cols = assembly.grid_shape
-    truth = _gt_grid(None, gt, assoc)
     pid, _ = assembly.as_arrays()
-    offsets = _orientation_offsets(assembly, descriptions, gt, assoc)
-    n = len(descriptions)
-
-    best = {"position_accuracy": 0.0, "position_and_rotation_accuracy": 0.0,
-            "global_rotation": 0}
+    grid = {(r, c): int(pid[r, c]) for r in range(rows) for c in range(cols)
+            if pid[r, c] >= 0}
+    best_k, best_correct, best_n = 0, [], -1
     for k in range(4):
-        rotated, (R, C) = _rotate_grid(
-            {(r, c): int(pid[r, c]) for r in range(rows) for c in range(cols)
-             if pid[r, c] >= 0}, rows, cols, k)
-        if (R, C) != (gt.rows, gt.cols):
+        rotated, shape = _rotate_grid(grid, rows, cols, k)
+        if grid_shape is not None and shape != tuple(grid_shape):
             continue
-        correct = [p for (r, c), p in rotated.items() if truth.get((r, c)) == p]
-        pos = len(correct)
-        if correct:
-            hist = np.bincount([offsets.get(p, 0) for p in correct], minlength=4)
-            posrot = int(hist.max())
-        else:
-            posrot = 0
-        if pos / max(n, 1) > best["position_accuracy"]:
-            best = {"position_accuracy": pos / max(n, 1),
-                    "position_and_rotation_accuracy": posrot / max(n, 1),
-                    "global_rotation": k}
-    return best
+        correct = [p for rc, p in rotated.items() if cells.get(p) == rc]
+        if len(correct) > best_n:
+            best_k, best_correct, best_n = k, correct, len(correct)
+    return best_k, best_correct
+
+
+def direct_accuracy(assembly, descriptions, gt, assoc) -> dict:
+    """Fraction of pieces in the correct cell, and correct cell *and* rotation.
+
+    Both are maximised over the four global quarter turns (see
+    :func:`_position_scan`).  For the combined figure the *same* turn offset
+    must hold for every counted piece; the offset satisfying the most pieces
+    is used.
+    """
+    k, correct = _position_scan(assembly, _gt_cells(gt, assoc),
+                                grid_shape=(gt.rows, gt.cols))
+    n = max(len(descriptions), 1)
+    if correct:
+        offsets = _orientation_offsets(assembly, descriptions, gt, assoc)
+        posrot = int(np.bincount([offsets.get(p, 0) for p in correct],
+                                 minlength=4).max())
+    else:
+        posrot = 0
+    return {"position_accuracy": len(correct) / n,
+            "position_and_rotation_accuracy": posrot / n,
+            "global_rotation": k}
 
 
 def neighbour_accuracy_from_cells(assembly, cells: dict) -> dict:
@@ -611,20 +647,9 @@ def neighbour_accuracy_from_cells(assembly, cells: dict) -> dict:
 
 def position_accuracy_from_cells(assembly, cells: dict) -> dict:
     """Fraction of pieces in the right cell, best over the four global turns."""
-    rows, cols = assembly.grid_shape
-    pid, _ = assembly.as_arrays()
-    grid = {(r, c): int(pid[r, c]) for r in range(rows) for c in range(cols)
-            if pid[r, c] >= 0}
-    n = max(len(cells), 1)
-    best = 0.0
-    best_k = 0
-    for k in range(4):
-        rotated, _ = _rotate_grid(grid, rows, cols, k)
-        hit = sum(1 for (rc, p) in rotated.items() if cells.get(p) == rc)
-        if hit / n > best:
-            best, best_k = hit / n, k
-    return {"position_accuracy": best, "global_rotation": best_k,
-            "n_scored": len(cells)}
+    k, correct = _position_scan(assembly, cells)
+    return {"position_accuracy": len(correct) / max(len(cells), 1),
+            "global_rotation": k, "n_scored": len(cells)}
 
 
 def orientation_accuracy_from_cells(assembly, rotations: dict,
@@ -684,74 +709,31 @@ def orientation_accuracy_from_cells(assembly, rotations: dict,
 
 
 def neighbour_accuracy(assembly, gt, assoc) -> dict:
-    """Fraction of true adjacencies reproduced by the arrangement.
+    """Fraction of true adjacencies reproduced, against synthetic ground truth.
 
     Invariant to any global rotation/translation of the solution, which makes
-    it the fairest single number for a jigsaw solver.  Both the *unordered*
-    version (the two pieces touch) and the *directed* version (they touch on
-    the correct pair of sides) are reported.
+    it the fairest single number for a jigsaw solver.  Delegates to
+    :func:`neighbour_accuracy_from_cells` so that both ground-truth formats
+    are scored by exactly the same code.
     """
-    rows, cols = assembly.grid_shape
-    pid, rot = assembly.as_arrays()
-    cell_of = {}
-    for r in range(rows):
-        for c in range(cols):
-            if pid[r, c] >= 0:
-                cell_of[int(pid[r, c])] = (r, c)
-
-    truth_pairs = set()
-    gt_cell = {}
-    for i, g in enumerate(assoc):
-        r, c, _ = gt.placements[g]
-        gt_cell[i] = (int(r), int(c))
-    inv = {v: k for k, v in gt_cell.items()}
-    for (r, c), i in inv.items():
-        for d, (dr, dc) in _STEP.items():
-            j = inv.get((r + dr, c + dc))
-            if j is not None and i < j:
-                truth_pairs.add((i, j))
-
-    got = 0
-    for (i, j) in truth_pairs:
-        if i not in cell_of or j not in cell_of:
-            continue
-        (r1, c1), (r2, c2) = cell_of[i], cell_of[j]
-        if abs(r1 - r2) + abs(c1 - c2) == 1:
-            got += 1
-    total = max(len(truth_pairs), 1)
-    return {"neighbour_accuracy": got / total,
-            "n_true_adjacencies": len(truth_pairs),
-            "n_recovered": got}
+    return neighbour_accuracy_from_cells(assembly, _gt_cells(gt, assoc))
 
 
 def rotation_accuracy(assembly, descriptions, gt, assoc) -> dict:
-    """Fraction of pieces whose orientation matches the ground truth.
+    """Fraction of pieces whose orientation matches the synthetic ground truth.
 
-    For each placed piece we compare the direction its side 0 faces in the
-    arrangement with the direction it faced in the original picture (from
-    :func:`gt_side_directions`).  A single global quarter-turn offset -- the
-    same for every piece -- is allowed and chosen to maximise the score.
+    A single global quarter-turn offset -- the same for every piece -- is
+    allowed and chosen to maximise the score, because nothing in the input
+    says which way is up.  Delegates to
+    :func:`orientation_accuracy_from_cells`; the two used to be separate
+    implementations of that same rule.
     """
-    rows, cols = assembly.grid_shape
-    offsets = {0: 0, 1: 0, 2: 0, 3: 0}
-    n = 0
-    for r in range(rows):
-        for c in range(cols):
-            pl = assembly.grid[r][c]
-            if pl is None:
-                continue
-            d = descriptions[pl.piece]
-            angle = gt.placements[assoc[pl.piece]][2]
-            dirs = gt_side_directions(d, angle)
-            # the side facing North in the arrangement is `rotation`
-            true_dir = dirs[pl.rotation]
-            k = DIRECTIONS.index(true_dir)     # 0 if it really was North
-            offsets[k] = offsets.get(k, 0) + 1
-            n += 1
-    best = max(offsets.values()) if n else 0
-    return {"rotation_accuracy": best / max(n, 1),
-            "n_pieces": n,
-            "orientation_histogram": offsets}
+    out = orientation_accuracy_from_cells(
+        assembly, _gt_rotations(descriptions, gt, assoc))
+    return {"rotation_accuracy": out["orientation_accuracy"],
+            "n_pieces": out["n_scored"],
+            "orientation_histogram": {k: int(v) for k, v
+                                      in enumerate(out["offset_histogram"])}}
 
 
 def matching_accuracy(table, descriptions, gt, assoc) -> dict:

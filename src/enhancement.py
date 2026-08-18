@@ -43,6 +43,7 @@ __all__ = [
     "resize_bilinear",
     "integral_image",
     # --- noise reduction ---------------------------------------------------
+    "mean_filter",
     "gaussian_kernel",
     "gaussian_kernel_1d",
     "gaussian_blur",
@@ -258,6 +259,38 @@ def integral_image(image: np.ndarray) -> np.ndarray:
 # ==========================================================================
 # 1a. Noise reduction
 # ==========================================================================
+def mean_filter(image: np.ndarray, size: int = 3,
+                mode: str = "reflect") -> np.ndarray:
+    """Arithmetic mean (box) filter over a ``size x size`` window.
+
+    The simplest linear smoother: every pixel is replaced by the unweighted
+    average of its neighbourhood.  It is the maximum-likelihood estimator of a
+    constant patch corrupted by additive Gaussian noise, so it suppresses that
+    noise by a factor of ``size``.
+
+    It is nevertheless not what the pipeline smooths with.  Because the kernel
+    is flat, its frequency response is a sinc with large side lobes, and in
+    the spatial domain it turns a step into a *piecewise linear* ramp whose
+    slope jumps at both ends -- visible as hard corners along an edge, where
+    the Gaussian's response is smooth everywhere.  It is provided because the
+    brief asks for mean, Gaussian and median noise reduction, and because it
+    is the baseline the other two are measured against in the report.
+
+    Like the Gaussian, the box kernel is separable (a 2-D average is a
+    horizontal average of vertical averages), so it runs as two 1-D passes at
+    ``O(k)`` per pixel rather than ``O(k^2)``.
+    """
+    size = int(size)
+    if size < 1:
+        raise ValueError("size must be >= 1")
+    if size % 2 == 0:
+        size += 1
+    if size == 1:
+        return to_float(image)
+    k = np.full(size, 1.0 / size, dtype=np.float64)
+    return convolve_separable(image, k, k, mode)
+
+
 def gaussian_kernel_1d(size: int | None = None, sigma: float = 1.0) -> np.ndarray:
     """Sampled, normalised 1-D Gaussian ``G(x) = exp(-x^2 / 2 sigma^2)``.
 

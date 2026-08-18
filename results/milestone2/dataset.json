@@ -22,21 +22,21 @@
   ],
   "pairs": {
     "train": {
-      "n_pairs": 10178,
-      "positive": 1454,
-      "negative": 8724,
+      "n_pairs": 10192,
+      "positive": 1456,
+      "negative": 8736,
       "positive_fraction": 0.14285714285714285
     },
     "val": {
-      "n_pairs": 2100,
-      "positive": 300,
-      "negative": 1800,
+      "n_pairs": 2128,
+      "positive": 304,
+      "negative": 1824,
       "positive_fraction": 0.14285714285714285
     },
     "test": {
-      "n_pairs": 1848,
-      "positive": 264,
-      "negative": 1584,
+      "n_pairs": 1834,
+      "positive": 262,
+      "negative": 1572,
       "positive_fraction": 0.14285714285714285
     }
   },

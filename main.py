@@ -231,6 +231,57 @@ def find_scenes(root: str, split: str = "train", min_objects: int = 35,
     return out
 
 
+def committed_scenes() -> list[tuple[str, str, int]]:
+    """The photographs committed to ``data/`` , in ``find_scenes`` form.
+
+    The full Roboflow export is far too large to live in the repository (see
+    ``.gitignore``), so a fresh clone has no ``detection/``.  The eight
+    photographs in ``data/input/`` and their answer keys in
+    ``data/ground_truth/`` are committed precisely so that the dataset demo
+    still runs end to end on real photographs out of the box.  The keys are
+    JSON rather than YOLO ``.txt``, so the boxes are re-expressed as
+    :class:`Box` in normalised form; ``cls`` is set to the index whose class
+    name is the piece identity, which is what :func:`dataset_true_cells`
+    expects.
+    """
+    out = []
+    for jp in sorted(glob.glob(os.path.join(DATA, "ground_truth", "*.json"))):
+        base = os.path.splitext(os.path.basename(jp))[0]
+        ip = os.path.join(DATA, "input", base + ".png")
+        if not os.path.exists(ip):
+            continue
+        out.append((ip, jp, len(json.load(open(jp, encoding="utf-8"))["pieces"])))
+    return out
+
+
+def load_committed_labels(path: str, shape) -> list[Box]:
+    """Read one ``data/ground_truth/*.json`` answer key as a list of boxes."""
+    key = json.load(open(path, encoding="utf-8"))
+    h, w = shape[:2]
+    idx_of = {name: i for i, name in enumerate(DATASET_CLASS_NAMES)}
+    out = []
+    for pid, rec in key["pieces"].items():
+        y0, x0, y1, x1 = rec["box_yxyx"]
+        out.append(Box((idx_of[str(pid)],
+                        ((x0 + x1) / 2) / w, ((y0 + y1) / 2) / h,
+                        (x1 - x0) / w, (y1 - y0) / h)))
+    return out
+
+
+def dataset_scenes():
+    """Every photograph to run the dataset demo on, and how to label it.
+
+    Prefers the full export in ``detection/`` when it is present; otherwise
+    falls back to the eight photographs committed to ``data/``.  Returns
+    ``(scenes, loader)`` where ``loader(label_path, shape) -> [Box]``.
+    """
+    scenes = find_scenes(DETECTION, "train", min_objects=35)
+    scenes += find_scenes(DETECTION, "valid", min_objects=35)
+    if scenes:
+        return scenes, (lambda p, shape: load_yolo_labels(p))
+    return committed_scenes(), load_committed_labels
+
+
 def detection_metrics(stats, boxes: list[Box], shape) -> dict:
     """Score segmented components against the annotated boxes.
 
@@ -318,8 +369,15 @@ def _dirs():
 
 
 def _sample_photo(max_side: int = 1280):
-    """A real scattered-pieces photograph from the provided dataset."""
+    """A real scattered-pieces photograph.
+
+    Taken from the full export in ``detection/`` when it is present, and
+    otherwise from the copies committed to ``data/input/``, so that every
+    stage figure still renders on a real photograph in a fresh clone.
+    """
     scenes = find_scenes(DETECTION, "train", min_objects=35, limit=1)
+    if not scenes:
+        scenes = committed_scenes()[:1]
     if not scenes:
         return None, None
     return imread(scenes[0][0], max_side=max_side), scenes[0][0]
@@ -350,6 +408,20 @@ def _save_json(obj, path):
     return path
 
 
+def _write_set(outdir, images, prefix="", sheet="contact_sheet.png",
+               cols=4):
+    """Write a ``name -> image`` mapping, plus a contact sheet of all of them.
+
+    Every stage demo produces exactly this: a handful of named variants and
+    one tiled overview for the report.
+    """
+    for name, img in images.items():
+        imwrite(os.path.join(outdir, prefix + name + ".png"), img)
+    if sheet:
+        imwrite(os.path.join(outdir, prefix + sheet),
+                make_grid(list(images.values()), cols=cols))
+
+
 # --------------------------------------------------------------------------
 # demo 1 -- enhancement
 # --------------------------------------------------------------------------
@@ -375,23 +447,23 @@ def demo_enhancement():
         "00_original": crop,
         "01_noisy_gaussian": noisy,
         "02_noisy_salt_pepper": sp,
-        "03_gaussian_blur_s1.5": enh.gaussian_blur(sp, 1.5),
-        "04_median_3": enh.median_filter(sp, 3),
-        "05_median_5": enh.median_filter(sp, 5),
-        "06_histogram_equalised": enh.histogram_equalization(crop),
-        "07_contrast_stretched": enh.contrast_stretch(crop, 2, 98),
-        "08_unsharp_mask": enh.unsharp_mask(crop, sigma=1.5, amount=1.2),
-        "09_laplacian_sharpen": enh.laplacian_sharpen(crop, alpha=0.35),
-        "10_pipeline_default": enh.enhance_for_segmentation(crop),
+        "03_mean_3": enh.mean_filter(sp, 3),
+        "04_gaussian_blur_s1.5": enh.gaussian_blur(sp, 1.5),
+        "05_median_3": enh.median_filter(sp, 3),
+        "06_median_5": enh.median_filter(sp, 5),
+        "07_histogram_equalised": enh.histogram_equalization(crop),
+        "08_contrast_stretched": enh.contrast_stretch(crop, 2, 98),
+        "09_unsharp_mask": enh.unsharp_mask(crop, sigma=1.5, amount=1.2),
+        "10_laplacian_sharpen": enh.laplacian_sharpen(crop, alpha=0.35),
+        "11_pipeline_default": enh.enhance_for_segmentation(crop),
     }
-    for name, img in outputs.items():
-        imwrite(os.path.join(R_ENH, name + ".png"), img)
-    imwrite(os.path.join(R_ENH, "contact_sheet.png"),
-            make_grid(list(outputs.values()), cols=4))
+    _write_set(R_ENH, outputs)
 
     # quantitative: which denoiser restores the salt-and-pepper image best?
     report = {}
-    for name, img in [("gaussian_1.5", enh.gaussian_blur(sp, 1.5)),
+    for name, img in [("mean_3", enh.mean_filter(sp, 3)),
+                      ("mean_5", enh.mean_filter(sp, 5)),
+                      ("gaussian_1.5", enh.gaussian_blur(sp, 1.5)),
                       ("gaussian_2.5", enh.gaussian_blur(sp, 2.5)),
                       ("median_3", enh.median_filter(sp, 3)),
                       ("median_5", enh.median_filter(sp, 5))]:
@@ -465,10 +537,7 @@ def demo_thresholding():
         "07_foreground_mask": seg.foreground_mask(photo, "background",
                                                   open_radius=2, close_radius=2),
     }
-    for name, img in variants.items():
-        imwrite(os.path.join(R_MASK, "threshold_" + name + ".png"), img)
-    imwrite(os.path.join(R_MASK, "threshold_contact_sheet.png"),
-            make_grid(list(variants.values()), cols=4))
+    _write_set(R_MASK, variants, prefix="threshold_")
     _save_json({"otsu_threshold": t_otsu, "isodata_threshold": t_iso},
                os.path.join(R_EVAL, "thresholds.json"))
     print(f"  Otsu {t_otsu:.3f}, isodata {t_iso:.3f}")
@@ -516,10 +585,7 @@ def demo_edges():
                                                   low=0.05, high=0.15)
     for lo, hi in ((0.02, 0.06), (0.05, 0.15), (0.10, 0.25)):
         out[f"11_canny_{lo}_{hi}"] = ed.canny(crop, 1.4, lo, hi)
-    for name, img in out.items():
-        imwrite(os.path.join(R_EDGE, name + ".png"), img)
-    imwrite(os.path.join(R_EDGE, "contact_sheet.png"),
-            make_grid(list(out.values()), cols=4))
+    _write_set(R_EDGE, out)
 
     stats = {"canny_low": stages["low"], "canny_high": stages["high"],
              "edge_pixel_fraction": {}}
@@ -804,8 +870,27 @@ def dataset_true_cells(pieces, boxes, shape):
 #: Solver settings used for the dataset photographs.  Full resolution matters:
 #: at 1280 px the piece body is ~75 px and the descriptors are measurably
 #: noisier than at the native 1920 px, where it is ~114 px.
+#:
+#: ``colour_metric="mgc"`` and ``border_mode="soft"`` are the two settings that
+#: differ from the library defaults, and both are there because a photographed
+#: puzzle breaks an assumption the defaults are allowed to make:
+#:
+#: * every piece is lit differently, so *absolute* colour agreement across a
+#:   seam is the wrong question; Gallagher's gradient compatibility asks the
+#:   right one ("does the picture continue?") and is illumination invariant.
+#:   Measured over all 50 answer-keyed photographs it lifts the matcher's
+#:   top-1 rate 0.267 -> 0.324 and position accuracy 0.119 -> 0.132.
+#: * the flat/tab/blank classification gets a piece's flat count right only
+#:   ~80 % of the time on these photographs (against ~100 % on synthetic
+#:   puzzles), and only about half the true corner pieces are recognised as
+#:   corners, so treating "a rim cell must show a flat outwards" as a *hard*
+#:   constraint rejects correct placements more often than it prevents wrong
+#:   ones.  Charging ``BORDER_PENALTY`` instead lifts neighbour accuracy
+#:   0.192 -> 0.220 over the 50 photographs and leaves the synthetic puzzles
+#:   at 100 %.  See ``main.py --run dataset`` and report section 9.
 DATASET_SOLVER = {"open_radius": 2, "close_radius": 2, "min_area_ratio": 0.45,
-                  "max_area_ratio": 1.7, "colour_norm": "meanstd"}
+                  "max_area_ratio": 1.7, "colour_norm": "meanstd",
+                  "colour_metric": "mgc", "border_mode": "soft"}
 
 
 def demo_data(limit: int = 8):
@@ -862,20 +947,21 @@ def demo_dataset(limit: int | None = None, max_side: int = 1920):
     supplied YOLO boxes (the only ground truth the dataset carries) and the
     reconstruction against the puzzle's known 5x7 layout.
     """
-    print("[dataset] real photographs from detection/")
     _dirs()
-    scenes = find_scenes(DETECTION, "train", min_objects=35)
-    scenes += find_scenes(DETECTION, "valid", min_objects=35)
+    scenes, load_labels = dataset_scenes()
+    if not scenes:
+        print(f"  dataset not found under {DETECTION} or {DATA}; skipping")
+        return
+    source = "detection/" if os.path.isdir(os.path.join(DETECTION, "images")) \
+        else "data/ (committed subset -- see README, 'Getting the dataset')"
+    print(f"[dataset] real photographs from {source}")
     if limit:
         scenes = scenes[:limit]
-    if not scenes:
-        print(f"  dataset not found under {DETECTION}; skipping")
-        return
 
     rows = []
     for i, (img_path, lab_path, n_obj) in enumerate(scenes):
         img = imread(img_path, max_side=max_side)
-        boxes = load_yolo_labels(lab_path)
+        boxes = load_labels(lab_path, img.shape)
         name = os.path.splitext(os.path.basename(img_path))[0][:20]
         res, rep = solve_one(img, DATASET_GRID, f"dataset_{name}",
                              solver_kwargs=DATASET_SOLVER,
@@ -982,6 +1068,11 @@ def main(argv=None):
                     help="dataset run: only the first N photographs")
     ap.add_argument("--run", choices=list(RUNS) + ["all", "stages"],
                     help="run the dataset, a single stage, or everything")
+    ap.add_argument("--photo", action="store_true",
+                    help="--input is a photograph of physical pieces: use the "
+                         "DATASET_SOLVER preset (illumination-invariant "
+                         "matching, soft border rule) instead of the library "
+                         "defaults, which assume a cleanly cut puzzle")
     ap.add_argument("--demo", dest="run", help=argparse.SUPPRESS)
     args = ap.parse_args(argv)
 
@@ -1039,7 +1130,10 @@ def main(argv=None):
                 grid = tuple(raw.get("grid", DATASET_GRID))
 
     _dirs()
-    solver_kwargs = DATASET_SOLVER if cells_key else None
+    # An answer key next to the input means this is one of the dataset
+    # photographs, so the photo preset is the right one; --photo asks for it
+    # explicitly for a photograph that has no key.
+    solver_kwargs = DATASET_SOLVER if (cells_key or args.photo) else None
     res, rep = solve_one(image, grid, name, reference=reference, gt=gt,
                          solver_kwargs=solver_kwargs)
     print(res.summary())

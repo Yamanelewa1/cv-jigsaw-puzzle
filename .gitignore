@@ -1,4 +1,52 @@
+# ---------------------------------------------------------------------------
+# Python and editor noise
+# ---------------------------------------------------------------------------
 __pycache__/
 *.pyc
+*.pyo
 .ipynb_checkpoints/
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.DS_Store
+Thumbs.db
 
+# ---------------------------------------------------------------------------
+# The dataset is NOT committed.
+#
+# GitHub rejects any single file over 100 MB, and the Roboflow export is
+# ~425 MB packed / ~453 MB extracted, so a repository carrying it cannot be
+# pushed at all.  Download the YOLO-format export of
+#
+#     https://universe.roboflow.com/hobby-projs/puzzle-vrkx6-9xh3l/dataset/1
+#
+# and unpack it into detection/ ; README.md ("Getting the dataset") gives the
+# expected layout.
+#
+# Everything the brief asks to be *submitted* -- source, tests, results,
+# figures, the report, and eight sample photographs with their answer keys in
+# data/ -- is committed and does not depend on this directory.  main.py falls
+# back to data/ automatically when detection/ is absent.
+# ---------------------------------------------------------------------------
+detection/
+detection.rar
+*.rar
+*.zip
+
+# ---------------------------------------------------------------------------
+# Generated intermediates -- regenerated on demand, never deliverables.
+#
+# results/milestone2/cache/ holds the pickled training puzzles that
+# main_milestone2.py rebuilds whenever they are missing.  It is a single file
+# of roughly 860 MB, and it was committed once by accident; ignoring it is
+# what stops that from happening again.  Note that an ignore rule has no
+# effect on a file git is *already* tracking, which is why that one had to be
+# removed from the index with `git rm --cached` first.
+#
+# Deliberately still committed, because the reports cite them: the trained
+# checkpoints results/milestone2/*.pt (1.8 MB total) and every JSON under
+# results/.
+# ---------------------------------------------------------------------------
+cache/
+*.pkl

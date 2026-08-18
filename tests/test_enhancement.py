@@ -62,6 +62,45 @@ def test_resize_bilinear_preserves_corners_and_shape():
 # --------------------------------------------------------------------------
 # noise reduction
 # --------------------------------------------------------------------------
+def test_mean_filter_equals_the_plain_neighbourhood_average():
+    rng = np.random.default_rng(3)
+    img = rng.random((24, 30))
+    out = enh.mean_filter(img, 3)
+    for y in range(1, 23):
+        for x in range(1, 29):
+            assert abs(out[y, x] - img[y - 1:y + 2, x - 1:x + 2].mean()) < 1e-12
+
+
+def test_mean_filter_preserves_a_constant_image():
+    img = np.full((16, 16), 0.4)
+    assert np.allclose(enh.mean_filter(img, 5), 0.4)
+
+
+def test_mean_filter_reduces_gaussian_noise():
+    rng = np.random.default_rng(4)
+    clean = np.full((64, 64), 0.5)
+    noisy = np.clip(clean + rng.normal(0, 0.1, clean.shape), 0, 1)
+    out = enh.mean_filter(noisy, 5)
+    assert out.std() < 0.4 * noisy.std()
+
+
+def test_mean_filter_edge_response_has_corners_the_gaussian_does_not():
+    """A box filter turns a step into a hard-cornered ramp.
+
+    The flat kernel's step response is piecewise linear, so its slope jumps
+    discontinuously at both ends of the transition; the Gaussian's is smooth
+    everywhere.  Comparing the largest second difference across the edge
+    measures exactly that, and it is the reason the pipeline smooths with
+    `gaussian_blur` rather than with the cheaper box filter.
+    """
+    step = np.zeros((8, 40))
+    step[:, 20:] = 1.0
+    box = enh.mean_filter(step, 9)[4]
+    gau = enh.gaussian_blur(step, sigma=2.0)[4]
+    # matched so that both transitions span a comparable width
+    assert np.abs(np.diff(box, 2)).max() > 1.8 * np.abs(np.diff(gau, 2)).max()
+
+
 def test_gaussian_kernel_normalised_and_symmetric():
     k = enh.gaussian_kernel_1d(sigma=1.7)
     assert abs(k.sum() - 1.0) < 1e-12
