@@ -313,3 +313,76 @@ def test_orientation_accuracy_is_one_for_a_correct_arrangement():
               for c in range(cols)] for r in range(rows)]
     asm3 = Assembly(grid_shape=(rows, cols), grid=mixed, n_placed=rows * cols)
     assert ev.orientation_accuracy_from_cells(asm3, rots)["orientation_accuracy"] < 1.0
+
+
+# --------------------------------------------------------------------------
+# recovering side-pair labels for the provided photographs (task 1)
+# --------------------------------------------------------------------------
+def _synthetic_sample():
+    """A generated puzzle, which carries the labels the recovery must match."""
+    return build_puzzle_sample(3, 4, seed=451)
+
+
+def test_rotation_recovery_reproduces_the_known_seams():
+    """On a puzzle whose true seams ARE known, the recovery must find them.
+
+    ``real_labels`` is used on photographs precisely because their seams are
+    unknown, so it cannot be checked there.  A generated puzzle carries both,
+    which makes it the only place the recovery can be pinned down: it is given
+    nothing but the cells, and must rediscover the side pairs the generator
+    recorded.
+    """
+    from src.ml.real_labels import recover_rotations
+
+    s = _synthetic_sample()
+    if s is None:
+        return                                     # segmentation missed a piece
+    lab = recover_rotations(s.descriptions, s.cells, s.grid_shape, table=s.table)
+
+    truth = {(a, sa, b, sb) for a, sa, b, sb in s.positives}
+    truth |= {(b, sb, a, sa) for a, sa, b, sb in s.positives}
+    found = sum(1 for p in lab.positives if p in truth)
+    assert found / max(len(lab.positives), 1) > 0.8, (
+        f"only {found}/{len(lab.positives)} recovered seams are true seams")
+
+
+def test_rotation_recovery_makes_seams_complementary():
+    """A tab must meet a blank across every recovered seam."""
+    from src.ml.real_labels import recover_rotations
+    from src.piece_description import SIDE_BLANK, SIDE_TAB
+
+    s = _synthetic_sample()
+    if s is None:
+        return
+    lab = recover_rotations(s.descriptions, s.cells, s.grid_shape, table=s.table)
+    assert lab.complementary_fraction > 0.8
+    assert lab.border_fraction > 0.8
+
+
+def test_true_neighbour_pairs_counts_the_grid_adjacencies():
+    """A 3x4 grid has 2*3*4 - 3 - 4 = 17 internal adjacencies."""
+    from src.ml.real_labels import true_neighbour_pairs
+
+    cells = {r * 4 + c: (r, c) for r in range(3) for c in range(4)}
+    assert len(true_neighbour_pairs(cells)) == 17
+
+
+def test_labelled_pairs_are_balanced_and_admissible():
+    """Negatives must be admissible pairs, not free wins on the tab/blank rule."""
+    from src.ml.real_labels import label_side_pairs
+    from src.piece_description import SIDE_BLANK, SIDE_FLAT, SIDE_TAB
+
+    s = _synthetic_sample()
+    if s is None:
+        return
+    labels, pairs, lab = label_side_pairs(s.descriptions, s.cells,
+                                          s.grid_shape, table=s.table,
+                                          negatives_per_positive=3)
+    assert len(labels) == len(pairs)
+    assert labels.sum() == len(lab.positives)
+    for (a, sa, b, sb) in pairs:
+        ta = s.descriptions[a].sides[sa].type
+        tb = s.descriptions[b].sides[sb].type
+        assert ta != SIDE_FLAT and tb != SIDE_FLAT
+        assert ((ta == SIDE_TAB and tb == SIDE_BLANK)
+                or (ta == SIDE_BLANK and tb == SIDE_TAB))

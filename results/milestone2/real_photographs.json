@@ -3,21 +3,21 @@
     "neighbour_accuracy": 0.20760907724870598,
     "position_accuracy": 0.11758832565284177,
     "quality": 0.3868743515904635,
-    "seconds_per_puzzle": 0.8544650374897174,
+    "seconds_per_puzzle": 0.9495239375000892,
     "n_images": 8
   },
   "siamese_cnn": {
-    "neighbour_accuracy": 0.21844316812182146,
-    "position_accuracy": 0.07032188241865661,
-    "quality": 0.6200279623480575,
-    "seconds_per_puzzle": 0.52456236249418,
+    "neighbour_accuracy": 0.37402537419073273,
+    "position_accuracy": 0.2964634827538053,
+    "quality": 0.6024880365325289,
+    "seconds_per_puzzle": 0.5576939749998928,
     "n_images": 8
   },
   "graph_nn": {
-    "neighbour_accuracy": 0.15007781742612858,
-    "position_accuracy": 0.10668551878229297,
-    "quality": 0.6614806192704124,
-    "seconds_per_puzzle": 0.5333213124904432,
+    "neighbour_accuracy": 0.244990556192492,
+    "position_accuracy": 0.13374528697109342,
+    "quality": 0.70070416993373,
+    "seconds_per_puzzle": 0.3965138750004371,
     "n_images": 8
   }
 }

@@ -1,369 +1,369 @@
 {
-  "puzzle": "3x4_seed269787",
+  "puzzle": "0718-9_Color_png.rf.2c1bd92af509689670d35a461b9f9ab7.jpg",
   "classical": [
     {
       "piece_a": 0,
       "side_a": 0,
-      "piece_b": 11,
+      "piece_b": 5,
       "side_b": 0,
-      "score": 0.8397848806481477,
-      "cost": 0.17460951440905614,
+      "score": 0.8670030752944586,
+      "cost": 0.14271275515545384,
       "is_neighbour": true,
       "relative_orientation": 2
     },
     {
       "piece_a": 0,
       "side_a": 1,
-      "piece_b": 7,
-      "side_b": 3,
-      "score": 0.8481699698962318,
-      "cost": 0.16467422707649843,
+      "piece_b": 15,
+      "side_b": 1,
+      "score": 0.8811806102146106,
+      "cost": 0.12649266813783164,
       "is_neighbour": true,
-      "relative_orientation": 0
+      "relative_orientation": 2
+    },
+    {
+      "piece_a": 0,
+      "side_a": 2,
+      "piece_b": 2,
+      "side_b": 2,
+      "score": 0.8406562100523394,
+      "cost": 0.17357248968132163,
+      "is_neighbour": true,
+      "relative_orientation": 2
     },
     {
       "piece_a": 0,
       "side_a": 3,
-      "piece_b": 6,
-      "side_b": 2,
-      "score": 0.8446453210007822,
-      "cost": 0.16883847820042142,
-      "is_neighbour": true,
-      "relative_orientation": 1
-    },
-    {
-      "piece_a": 1,
-      "side_a": 1,
-      "piece_b": 4,
-      "side_b": 0,
-      "score": 0.9289397024784429,
-      "cost": 0.07371144811067994,
-      "is_neighbour": true,
-      "relative_orientation": 1
-    },
-    {
-      "piece_a": 1,
-      "side_a": 2,
-      "piece_b": 11,
-      "side_b": 1,
-      "score": 0.8946938846374652,
-      "cost": 0.11127364755034197,
-      "is_neighbour": true,
-      "relative_orientation": 1
-    },
-    {
-      "piece_a": 1,
-      "side_a": 3,
-      "piece_b": 6,
-      "side_b": 1,
-      "score": 0.8999878805199646,
-      "cost": 0.10537398183742307,
-      "is_neighbour": true,
-      "relative_orientation": 0
-    },
-    {
-      "piece_a": 2,
-      "side_a": 0,
-      "piece_b": 4,
-      "side_b": 2,
-      "score": 0.884621641909145,
-      "cost": 0.12259524865483735,
-      "is_neighbour": true,
-      "relative_orientation": 0
-    },
-    {
-      "piece_a": 2,
-      "side_a": 3,
-      "piece_b": 5,
-      "side_b": 0,
-      "score": 0.9265517383776829,
-      "cost": 0.07628539199052928,
-      "is_neighbour": true,
-      "relative_orientation": 3
-    },
-    {
-      "piece_a": 3,
-      "side_a": 0,
       "piece_b": 10,
-      "side_b": 2,
-      "score": 0.9172579738402399,
-      "cost": 0.08636652258176224,
+      "side_b": 0,
+      "score": 0.8719315305569327,
+      "cost": 0.13704437815953183,
       "is_neighbour": true,
-      "relative_orientation": 0
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 1,
+      "side_a": 0,
+      "piece_b": 12,
+      "side_b": 0,
+      "score": 0.8290695193463528,
+      "cost": 0.18745126807893567,
+      "is_neighbour": true,
+      "relative_orientation": 2
+    },
+    {
+      "piece_a": 1,
+      "side_a": 1,
+      "piece_b": 34,
+      "side_b": 0,
+      "score": 0.8575249141621986,
+      "cost": 0.15370504594755535,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 1,
+      "side_a": 2,
+      "piece_b": 15,
+      "side_b": 1,
+      "score": 0.9082821441159721,
+      "cost": 0.09620021724259284,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 2,
+      "side_a": 1,
+      "piece_b": 18,
+      "side_b": 0,
+      "score": 0.8600031055629959,
+      "cost": 0.15081927862134104,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 2,
+      "side_a": 2,
+      "piece_b": 32,
+      "side_b": 3,
+      "score": 0.8743636292462156,
+      "cost": 0.13425893808301492,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 2,
+      "side_a": 3,
+      "piece_b": 29,
+      "side_b": 3,
+      "score": 0.8768309949115146,
+      "cost": 0.13144101337724098,
+      "is_neighbour": true,
+      "relative_orientation": 2
     },
     {
       "piece_a": 3,
-      "side_a": 1,
-      "piece_b": 5,
-      "side_b": 2,
-      "score": 0.9307220071472543,
-      "cost": 0.07179464226874664,
-      "is_neighbour": true,
-      "relative_orientation": 3
-    },
-    {
-      "piece_a": 4,
       "side_a": 0,
-      "piece_b": 1,
+      "piece_b": 15,
       "side_b": 1,
-      "score": 0.9289397024784437,
-      "cost": 0.07371144811067903,
+      "score": 0.8907756355706523,
+      "cost": 0.11566269515095821,
       "is_neighbour": true,
       "relative_orientation": 3
     },
     {
-      "piece_a": 4,
+      "piece_a": 3,
       "side_a": 2,
-      "piece_b": 2,
-      "side_b": 0,
-      "score": 0.8846216419091437,
-      "cost": 0.1225952486548389,
+      "piece_b": 15,
+      "side_b": 1,
+      "score": 0.882973637710093,
+      "cost": 0.12445993419181556,
       "is_neighbour": true,
-      "relative_orientation": 0
+      "relative_orientation": 1
     }
   ],
   "siamese_cnn": [
     {
       "piece_a": 0,
       "side_a": 0,
-      "piece_b": 11,
+      "piece_b": 32,
       "side_b": 0,
-      "score": 0.9974831938743591,
-      "cost": 0.002519978606308336,
+      "score": 0.9859486818313599,
+      "cost": 0.014150972558163223,
       "is_neighbour": true,
       "relative_orientation": 2
     },
     {
       "piece_a": 0,
       "side_a": 1,
-      "piece_b": 7,
+      "piece_b": 15,
       "side_b": 3,
-      "score": 0.5557193607091904,
-      "cost": 0.5874918590850818,
+      "score": 0.7794846892356873,
+      "cost": 0.24912223245310638,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 0,
+      "side_a": 2,
+      "piece_b": 24,
+      "side_b": 0,
+      "score": 0.9187927842140198,
+      "cost": 0.08469466168734506,
       "is_neighbour": true,
       "relative_orientation": 0
     },
     {
       "piece_a": 0,
       "side_a": 3,
-      "piece_b": 11,
+      "piece_b": 33,
+      "side_b": 1,
+      "score": 0.7196504771709442,
+      "cost": 0.32898963321393393,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 1,
+      "side_a": 0,
+      "piece_b": 9,
+      "side_b": 2,
+      "score": 0.9691110253334045,
+      "cost": 0.031376096427384335,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 1,
+      "side_a": 1,
+      "piece_b": 34,
+      "side_b": 0,
+      "score": 0.9020648896694183,
+      "cost": 0.10306882174051513,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 1,
+      "side_a": 2,
+      "piece_b": 34,
+      "side_b": 1,
+      "score": 0.8030705749988556,
+      "cost": 0.21931267973319796,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 2,
+      "side_a": 1,
+      "piece_b": 21,
+      "side_b": 2,
+      "score": 0.9935696125030518,
+      "cost": 0.0064511515002170314,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 2,
+      "side_a": 2,
+      "piece_b": 20,
+      "side_b": 0,
+      "score": 0.8546115458011627,
+      "cost": 0.15710824568191234,
+      "is_neighbour": true,
+      "relative_orientation": 0
+    },
+    {
+      "piece_a": 2,
+      "side_a": 3,
+      "piece_b": 24,
+      "side_b": 0,
+      "score": 0.7002412378787994,
+      "cost": 0.3563303777673323,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 3,
+      "side_a": 0,
+      "piece_b": 33,
       "side_b": 3,
-      "score": 0.3581659756600857,
-      "cost": 1.0267587808573444,
-      "is_neighbour": false,
-      "relative_orientation": 2
-    },
-    {
-      "piece_a": 1,
-      "side_a": 1,
-      "piece_b": 4,
-      "side_b": 0,
-      "score": 0.9997280538082123,
-      "cost": 0.0002719831758586038,
+      "score": 0.8816697001457214,
+      "cost": 0.1259377827448002,
       "is_neighbour": true,
       "relative_orientation": 1
     },
     {
-      "piece_a": 1,
+      "piece_a": 3,
       "side_a": 2,
-      "piece_b": 11,
+      "piece_b": 24,
       "side_b": 1,
-      "score": 0.9993834495544434,
-      "cost": 0.000616740590942764,
+      "score": 0.7274848520755768,
+      "cost": 0.31816210204250955,
       "is_neighbour": true,
       "relative_orientation": 1
-    },
-    {
-      "piece_a": 1,
-      "side_a": 3,
-      "piece_b": 6,
-      "side_b": 1,
-      "score": 0.9993840456008911,
-      "cost": 0.0006161441769534444,
-      "is_neighbour": true,
-      "relative_orientation": 0
-    },
-    {
-      "piece_a": 2,
-      "side_a": 0,
-      "piece_b": 4,
-      "side_b": 2,
-      "score": 0.9999502897262573,
-      "cost": 4.9711509339281633e-05,
-      "is_neighbour": true,
-      "relative_orientation": 0
-    },
-    {
-      "piece_a": 2,
-      "side_a": 3,
-      "piece_b": 5,
-      "side_b": 0,
-      "score": 0.9995711147785187,
-      "cost": 0.0004289772190531321,
-      "is_neighbour": true,
-      "relative_orientation": 3
-    },
-    {
-      "piece_a": 3,
-      "side_a": 0,
-      "piece_b": 10,
-      "side_b": 2,
-      "score": 0.9784362316131592,
-      "cost": 0.021799663801406292,
-      "is_neighbour": true,
-      "relative_orientation": 0
-    },
-    {
-      "piece_a": 3,
-      "side_a": 1,
-      "piece_b": 5,
-      "side_b": 2,
-      "score": 0.9989883899688721,
-      "cost": 0.0010121220538961738,
-      "is_neighbour": true,
-      "relative_orientation": 3
-    },
-    {
-      "piece_a": 4,
-      "side_a": 0,
-      "piece_b": 1,
-      "side_b": 1,
-      "score": 0.9997280538082123,
-      "cost": 0.0002719831758586038,
-      "is_neighbour": true,
-      "relative_orientation": 3
-    },
-    {
-      "piece_a": 4,
-      "side_a": 2,
-      "piece_b": 2,
-      "side_b": 0,
-      "score": 0.9999502897262573,
-      "cost": 4.9711509339281633e-05,
-      "is_neighbour": true,
-      "relative_orientation": 0
     }
   ],
   "graph_nn": [
     {
       "piece_a": 0,
       "side_a": 0,
-      "piece_b": 11,
-      "side_b": 0,
-      "score": 0.9992803931236267,
-      "cost": 0.0007198659176809455,
+      "piece_b": 16,
+      "side_b": 3,
+      "score": 0.8771591186523438,
+      "cost": 0.13106686788791422,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 0,
+      "side_a": 1,
+      "piece_b": 1,
+      "side_b": 1,
+      "score": 0.8964095115661621,
+      "cost": 0.10935792626141201,
       "is_neighbour": true,
       "relative_orientation": 2
     },
     {
       "piece_a": 0,
-      "side_a": 1,
-      "piece_b": 7,
-      "side_b": 3,
-      "score": 0.98428875207901,
-      "cost": 0.015835977742335968,
+      "side_a": 2,
+      "piece_b": 24,
+      "side_b": 0,
+      "score": 0.8980780839920044,
+      "cost": 0.10749826123965472,
       "is_neighbour": true,
       "relative_orientation": 0
     },
     {
       "piece_a": 0,
       "side_a": 3,
-      "piece_b": 6,
-      "side_b": 2,
-      "score": 0.9856977462768555,
-      "cost": 0.01440551673229293,
+      "piece_b": 26,
+      "side_b": 3,
+      "score": 0.8653327226638794,
+      "cost": 0.14464119553081475,
       "is_neighbour": true,
-      "relative_orientation": 1
+      "relative_orientation": 2
     },
     {
       "piece_a": 1,
-      "side_a": 1,
-      "piece_b": 4,
-      "side_b": 0,
-      "score": 0.9251890778541565,
-      "cost": 0.07775715386730098,
-      "is_neighbour": true,
-      "relative_orientation": 1
-    },
-    {
-      "piece_a": 1,
-      "side_a": 2,
-      "piece_b": 11,
-      "side_b": 1,
-      "score": 0.9940063953399658,
-      "cost": 0.0060116384026331566,
-      "is_neighbour": true,
-      "relative_orientation": 1
-    },
-    {
-      "piece_a": 1,
-      "side_a": 3,
-      "piece_b": 6,
-      "side_b": 1,
-      "score": 0.9978042244911194,
-      "cost": 0.0021981897586711226,
-      "is_neighbour": true,
-      "relative_orientation": 0
-    },
-    {
-      "piece_a": 2,
       "side_a": 0,
-      "piece_b": 4,
-      "side_b": 2,
-      "score": 0.9922487735748291,
-      "cost": 0.007781423323929624,
-      "is_neighbour": true,
-      "relative_orientation": 0
-    },
-    {
-      "piece_a": 2,
-      "side_a": 3,
-      "piece_b": 5,
-      "side_b": 0,
-      "score": 0.9873836636543274,
-      "cost": 0.012696598104523586,
-      "is_neighbour": true,
-      "relative_orientation": 3
-    },
-    {
-      "piece_a": 3,
-      "side_a": 0,
-      "piece_b": 10,
-      "side_b": 2,
-      "score": 0.906618595123291,
-      "cost": 0.09803342985042361,
-      "is_neighbour": true,
-      "relative_orientation": 0
-    },
-    {
-      "piece_a": 3,
-      "side_a": 1,
-      "piece_b": 5,
-      "side_b": 2,
-      "score": 0.9996688365936279,
-      "cost": 0.00033121825308208007,
-      "is_neighbour": true,
-      "relative_orientation": 3
-    },
-    {
-      "piece_a": 4,
-      "side_a": 0,
-      "piece_b": 1,
-      "side_b": 1,
-      "score": 0.9251890778541565,
-      "cost": 0.07775715386730098,
-      "is_neighbour": true,
-      "relative_orientation": 3
-    },
-    {
-      "piece_a": 4,
-      "side_a": 2,
       "piece_b": 2,
+      "side_b": 3,
+      "score": 0.8220541477203369,
+      "cost": 0.19594901295640108,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 1,
+      "side_a": 1,
+      "piece_b": 34,
       "side_b": 0,
-      "score": 0.9922487735748291,
-      "cost": 0.007781423323929624,
+      "score": 0.9226105809211731,
+      "cost": 0.0805480393341383,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 1,
+      "side_a": 2,
+      "piece_b": 35,
+      "side_b": 3,
+      "score": 0.9040756821632385,
+      "cost": 0.10084220288709553,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 2,
+      "side_a": 1,
+      "piece_b": 34,
+      "side_b": 0,
+      "score": 0.8942863345146179,
+      "cost": 0.1117292703968493,
+      "is_neighbour": true,
+      "relative_orientation": 1
+    },
+    {
+      "piece_a": 2,
+      "side_a": 2,
+      "piece_b": 0,
+      "side_b": 2,
+      "score": 0.8863668441772461,
+      "cost": 0.12062436872339874,
+      "is_neighbour": true,
+      "relative_orientation": 2
+    },
+    {
+      "piece_a": 2,
+      "side_a": 3,
+      "piece_b": 18,
+      "side_b": 0,
+      "score": 0.8963977694511414,
+      "cost": 0.1093710253994457,
+      "is_neighbour": true,
+      "relative_orientation": 3
+    },
+    {
+      "piece_a": 3,
+      "side_a": 0,
+      "piece_b": 29,
+      "side_b": 2,
+      "score": 0.8907384872436523,
+      "cost": 0.1157043993693303,
       "is_neighbour": true,
       "relative_orientation": 0
+    },
+    {
+      "piece_a": 3,
+      "side_a": 2,
+      "piece_b": 26,
+      "side_b": 1,
+      "score": 0.9282439947128296,
+      "cost": 0.07446065541764461,
+      "is_neighbour": true,
+      "relative_orientation": 1
     }
   ]
 }

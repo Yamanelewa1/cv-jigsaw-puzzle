@@ -26,7 +26,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import torch                                                  # noqa: E402
 
-from src.ml.dataset import PairDataset, generate_dataset      # noqa: E402
+from src.ml.dataset import (PairDataset, generate_dataset,     # noqa: E402
+                            generate_real_dataset)
 from src.ml.evaluate import compare_methods, evaluate_method  # noqa: E402
 from src.ml.gnn import GNNConfig, HAS_PYG                     # noqa: E402
 from src.ml.infer import (gnn_table, predicted_matches,       # noqa: E402
@@ -48,7 +49,7 @@ def _save(obj, name):
             o.tolist() if isinstance(o, np.ndarray) else
             float(o) if isinstance(o, np.floating) else
             int(o) if isinstance(o, np.integer) else str(o)))
-    print(f"  wrote results/milestone2/{name}")
+    print(f"  wrote {os.path.relpath(path, ROOT).replace(os.sep, '/')}")
     return path
 
 
@@ -61,6 +62,10 @@ def main(argv=None):
     ap.add_argument("--batch-size", type=int, default=256)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--real", action="store_true",
+                    help="train on the PROVIDED photographs (detection/) "
+                         "instead of generated puzzles, as Milestone 2 task 1 "
+                         "requires; this is what results/milestone2/ holds")
     ap.add_argument("--no-augment", action="store_true")
     ap.add_argument("--scaling", action="store_true",
                     help="also report accuracy against puzzle size")
@@ -72,18 +77,36 @@ def main(argv=None):
                     help="also draw the charts and the reconstructed images")
     args = ap.parse_args(argv)
 
+    global OUT
+    if not args.real:
+        # The committed results are the --real ones, because Milestone 2 task 1
+        # asks for the provided data; a generated-puzzle run is kept separate
+        # so it cannot overwrite them.
+        OUT = os.path.join(ROOT, "results", "milestone2_generated")
     os.makedirs(OUT, exist_ok=True)
     torch.set_num_threads(max(1, min(8, os.cpu_count() or 4)))
     t_all = time.time()
 
     # ---- 1. dataset preparation --------------------------------------
     print("[1/5] dataset preparation")
-    samples, split = generate_dataset(n_puzzles=args.puzzles, seed=args.seed,
-                                      cache_dir=CACHE)
+    if args.real:
+        detection = os.path.join(ROOT, "detection")
+        print("  source: the PROVIDED photographs under detection/")
+        samples, split = generate_real_dataset(detection, seed=args.seed,
+                                               cache_dir=CACHE)
+        if not samples:
+            print("  no photographs could be labelled; is detection/ present?")
+            return 1
+    else:
+        print("  source: generated puzzles (pass --real for the provided data)")
+        samples, split = generate_dataset(n_puzzles=args.puzzles,
+                                          seed=args.seed, cache_dir=CACHE)
     train_pairs = PairDataset(samples, split.train, mode="strip", seed=args.seed)
     val_pairs = PairDataset(samples, split.val, mode="strip", seed=args.seed + 1)
     test_pairs = PairDataset(samples, split.test, mode="strip", seed=args.seed + 2)
     data_info = {
+        "source": ("provided photographs (detection/)" if args.real
+                   else "generated puzzles"),
         "n_puzzles": len(samples),
         "split_puzzles": split.counts(),
         "split_note": "split by puzzle, never by pair, and shared by both models",

@@ -58,6 +58,8 @@ __all__ = [
     "SplitSpec",
     "build_puzzle_sample",
     "generate_dataset",
+    "build_real_puzzle_sample",
+    "generate_real_dataset",
     "PairDataset",
     "augment_strip",
 ]
@@ -440,3 +442,103 @@ class PairDataset:
         return {"n_pairs": len(self.pairs), "positive": pos,
                 "negative": len(self.pairs) - pos,
                 "positive_fraction": pos / max(len(self.pairs), 1)}
+
+
+# ==========================================================================
+# The provided photographs
+#
+# The brief asks for the models to be trained on the data provided, not on
+# generated puzzles.  The obstacle is that the export labels each piece's
+# identity rather than its seams; src.ml.real_labels recovers the missing
+# rotation so that a true *piece* pair becomes a true *side* pair.
+# ==========================================================================
+def build_real_puzzle_sample(img_path: str, lab_path: str,
+                             max_side: int = 1920,
+                             min_complementary: float = 0.6):
+    """One labelled :class:`PuzzleSample` from a dataset photograph.
+
+    Returns ``None`` when the photograph cannot be labelled reliably: either
+    the annotations could not be matched to the segmented pieces, or the
+    recovered rotations disagree with the tab/blank rule on too many seams
+    (``min_complementary``).  Dropping those is deliberate -- a photograph
+    whose labels are unreliable is worse than no photograph at all.
+
+    Only the seams that come out **complementary** are kept as positives, so
+    the training set contains the ones the recovery is confident about.
+    """
+    from .hard_eval import REAL_PHOTO_MATCHER, build_real_sample
+    from .real_labels import recover_rotations
+    from ..piece_description import SIDE_BLANK, SIDE_TAB
+
+    base = build_real_sample(img_path, lab_path, max_side)
+    if base is None or len(base.cells) < 20:
+        return None
+
+    lab = recover_rotations(base.descriptions, base.cells, base.grid_shape,
+                            table=base.table)
+    if lab.complementary_fraction < min_complementary:
+        return None
+
+    keep = []
+    for (a, sa, b, sb) in lab.positives:
+        ta = base.descriptions[a].sides[sa].type
+        tb = base.descriptions[b].sides[sb].type
+        if ((ta == SIDE_TAB and tb == SIDE_BLANK)
+                or (ta == SIDE_BLANK and tb == SIDE_TAB)):
+            keep.append((a, sa, b, sb))
+    if not keep:
+        return None
+
+    base.positives = keep
+    base.source = os.path.basename(img_path)
+    return base
+
+
+def generate_real_dataset(detection_dir: str, limit: int | None = None,
+                          seed: int = 0, cache_dir: str | None = None,
+                          max_side: int = 1920, verbose: bool = True):
+    """Build the training set from the **provided photographs**.
+
+    Split is by *photograph*, never by pair, exactly as for the generated
+    puzzles, so no side of a test photograph is seen during training.
+
+    Returns ``(samples, split)``.
+    """
+    from .hard_eval import real_scenes
+
+    key = f"real-{limit}-{seed}-{max_side}"
+    digest = hashlib.md5(key.encode()).hexdigest()[:10]
+    path = (os.path.join(cache_dir, f"real_{digest}.pkl")
+            if cache_dir else None)
+    if path and os.path.exists(path):
+        with open(path, "rb") as fh:
+            samples, split = pickle.load(fh)
+        if verbose:
+            print(f"  loaded {len(samples)} cached photographs from {path}")
+        return samples, split
+
+    scenes = real_scenes(detection_dir, limit)
+    samples = []
+    for i, (img, lab) in enumerate(scenes):
+        s = build_real_puzzle_sample(img, lab, max_side)
+        if s is not None:
+            samples.append(s)
+        if verbose and (i + 1) % 5 == 0:
+            print(f"  {i + 1}/{len(scenes)} photographs, "
+                  f"{len(samples)} labelled", flush=True)
+    if not samples:
+        return [], SplitSpec(train=[], val=[], test=[])
+
+    rng = np.random.default_rng(seed)
+    idx = np.arange(len(samples))
+    rng.shuffle(idx)
+    n_tr = int(round(0.70 * len(idx)))
+    n_va = max(1, int(round(0.15 * len(idx))))
+    split = SplitSpec(train=idx[:n_tr].tolist(),
+                      val=idx[n_tr:n_tr + n_va].tolist(),
+                      test=idx[n_tr + n_va:].tolist())
+    if path:
+        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        with open(path, "wb") as fh:
+            pickle.dump((samples, split), fh)
+    return samples, split

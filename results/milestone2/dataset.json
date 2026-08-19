@@ -1,20 +1,13 @@
 {
-  "n_puzzles": 60,
+  "source": "provided photographs (detection/)",
+  "n_puzzles": 49,
   "split_puzzles": {
-    "train": 42,
-    "val": 9,
-    "test": 9
+    "train": 34,
+    "val": 7,
+    "test": 8
   },
   "split_note": "split by puzzle, never by pair, and shared by both models",
   "sizes": [
-    [
-      3,
-      4
-    ],
-    [
-      4,
-      5
-    ],
     [
       5,
       7
@@ -22,21 +15,21 @@
   ],
   "pairs": {
     "train": {
-      "n_pairs": 10192,
-      "positive": 1456,
-      "negative": 8736,
+      "n_pairs": 10724,
+      "positive": 1532,
+      "negative": 9192,
       "positive_fraction": 0.14285714285714285
     },
     "val": {
-      "n_pairs": 2128,
-      "positive": 304,
-      "negative": 1824,
+      "n_pairs": 2289,
+      "positive": 327,
+      "negative": 1962,
       "positive_fraction": 0.14285714285714285
     },
     "test": {
-      "n_pairs": 1834,
-      "positive": 262,
-      "negative": 1572,
+      "n_pairs": 2611,
+      "positive": 373,
+      "negative": 2238,
       "positive_fraction": 0.14285714285714285
     }
   },

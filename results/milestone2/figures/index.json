@@ -1,6 +1,6 @@
 [
   {
-    "figure": "results\\milestone2\\figures\\real_0718-10_Color_png.rf.f269500b6bdb1b871bf.png",
+    "figure": "results\\milestone2_real\\figures\\real_0718-10_Color_png.rf.f269500b6bdb1b871bf.png",
     "photograph": "0718-10_Color_png.rf.f269500b6bdb1b871bfc5b9c53814026.jpg",
     "scores": {
       "classical": {
@@ -8,17 +8,17 @@
         "position_accuracy": 0.08571428571428572
       },
       "siamese_cnn": {
-        "neighbour_accuracy": 0.29310344827586204,
-        "position_accuracy": 0.08571428571428572
+        "neighbour_accuracy": 0.2413793103448276,
+        "position_accuracy": 0.22857142857142856
       },
       "graph_nn": {
-        "neighbour_accuracy": 0.10344827586206896,
-        "position_accuracy": 0.08571428571428572
+        "neighbour_accuracy": 0.20689655172413793,
+        "position_accuracy": 0.14285714285714285
       }
     }
   },
   {
-    "figure": "results\\milestone2\\figures\\real_0718-11_Color_png.rf.d936d44a14098628d03.png",
+    "figure": "results\\milestone2_real\\figures\\real_0718-11_Color_png.rf.d936d44a14098628d03.png",
     "photograph": "0718-11_Color_png.rf.d936d44a14098628d03f3c91ac6d1fc3.jpg",
     "scores": {
       "classical": {
@@ -26,17 +26,17 @@
         "position_accuracy": 0.2571428571428571
       },
       "siamese_cnn": {
-        "neighbour_accuracy": 0.1724137931034483,
-        "position_accuracy": 0.05714285714285714
+        "neighbour_accuracy": 0.5862068965517241,
+        "position_accuracy": 0.4
       },
       "graph_nn": {
-        "neighbour_accuracy": 0.20689655172413793,
-        "position_accuracy": 0.05714285714285714
+        "neighbour_accuracy": 0.29310344827586204,
+        "position_accuracy": 0.14285714285714285
       }
     }
   },
   {
-    "figure": "results\\milestone2\\figures\\real_0718-13_Color_png.rf.f64d0f9e58830e1005c.png",
+    "figure": "results\\milestone2_real\\figures\\real_0718-13_Color_png.rf.f64d0f9e58830e1005c.png",
     "photograph": "0718-13_Color_png.rf.f64d0f9e58830e1005c4cc3a74f4ac42.jpg",
     "scores": {
       "classical": {
@@ -44,17 +44,17 @@
         "position_accuracy": 0.21212121212121213
       },
       "siamese_cnn": {
-        "neighbour_accuracy": 0.21568627450980393,
-        "position_accuracy": 0.09090909090909091
+        "neighbour_accuracy": 0.39215686274509803,
+        "position_accuracy": 0.2727272727272727
       },
       "graph_nn": {
-        "neighbour_accuracy": 0.09803921568627451,
+        "neighbour_accuracy": 0.2549019607843137,
         "position_accuracy": 0.09090909090909091
       }
     }
   },
   {
-    "figure": "results\\milestone2\\figures\\real_0718-14_Color_png.rf.7ba095874a51a7e4c95.png",
+    "figure": "results\\milestone2_real\\figures\\real_0718-14_Color_png.rf.7ba095874a51a7e4c95.png",
     "photograph": "0718-14_Color_png.rf.7ba095874a51a7e4c9516427b281ed77.jpg",
     "scores": {
       "classical": {
@@ -62,17 +62,17 @@
         "position_accuracy": 0.05714285714285714
       },
       "siamese_cnn": {
-        "neighbour_accuracy": 0.20689655172413793,
-        "position_accuracy": 0.05714285714285714
+        "neighbour_accuracy": 0.3275862068965517,
+        "position_accuracy": 0.3142857142857143
       },
       "graph_nn": {
-        "neighbour_accuracy": 0.10344827586206896,
-        "position_accuracy": 0.17142857142857143
+        "neighbour_accuracy": 0.27586206896551724,
+        "position_accuracy": 0.14285714285714285
       }
     }
   },
   {
-    "figure": "results\\milestone2\\figures\\real_0718-15_Color_png.rf.25e7338f3f3eb093413.png",
+    "figure": "results\\milestone2_real\\figures\\real_0718-15_Color_png.rf.25e7338f3f3eb093413.png",
     "photograph": "0718-15_Color_png.rf.25e7338f3f3eb093413bf4b6e0e78446.jpg",
     "scores": {
       "classical": {
@@ -80,17 +80,17 @@
         "position_accuracy": 0.12121212121212122
       },
       "siamese_cnn": {
-        "neighbour_accuracy": 0.25,
-        "position_accuracy": 0.06060606060606061
+        "neighbour_accuracy": 0.3076923076923077,
+        "position_accuracy": 0.15151515151515152
       },
       "graph_nn": {
-        "neighbour_accuracy": 0.23076923076923078,
-        "position_accuracy": 0.15151515151515152
+        "neighbour_accuracy": 0.25,
+        "position_accuracy": 0.18181818181818182
       }
     }
   },
   {
-    "figure": "results\\milestone2\\figures\\real_0718-17_Color_png.rf.85245852dea8a5b4f29.png",
+    "figure": "results\\milestone2_real\\figures\\real_0718-17_Color_png.rf.85245852dea8a5b4f29.png",
     "photograph": "0718-17_Color_png.rf.85245852dea8a5b4f29e5fd4f6822278.jpg",
     "scores": {
       "classical": {
@@ -98,17 +98,17 @@
         "position_accuracy": 0.06451612903225806
       },
       "siamese_cnn": {
-        "neighbour_accuracy": 0.1956521739130435,
-        "position_accuracy": 0.0967741935483871
+        "neighbour_accuracy": 0.41304347826086957,
+        "position_accuracy": 0.2903225806451613
       },
       "graph_nn": {
-        "neighbour_accuracy": 0.13043478260869565,
-        "position_accuracy": 0.0967741935483871
+        "neighbour_accuracy": 0.2826086956521739,
+        "position_accuracy": 0.22580645161290322
       }
     }
   },
   {
-    "figure": "results\\milestone2\\figures\\real_0718-18_Color_png.rf.7ce49fe96d1498ecbab.png",
+    "figure": "results\\milestone2_real\\figures\\real_0718-18_Color_png.rf.7ce49fe96d1498ecbab.png",
     "photograph": "0718-18_Color_png.rf.7ce49fe96d1498ecbab4d952cca0c910.jpg",
     "scores": {
       "classical": {
@@ -116,17 +116,17 @@
         "position_accuracy": 0.05714285714285714
       },
       "siamese_cnn": {
-        "neighbour_accuracy": 0.1724137931034483,
-        "position_accuracy": 0.02857142857142857
+        "neighbour_accuracy": 0.41379310344827586,
+        "position_accuracy": 0.45714285714285713
       },
       "graph_nn": {
-        "neighbour_accuracy": 0.1724137931034483,
-        "position_accuracy": 0.11428571428571428
+        "neighbour_accuracy": 0.1896551724137931,
+        "position_accuracy": 0.05714285714285714
       }
     }
   },
   {
-    "figure": "results\\milestone2\\figures\\real_0718-19_Color_png.rf.eb19f702298ab96d0a9.png",
+    "figure": "results\\milestone2_real\\figures\\real_0718-19_Color_png.rf.eb19f702298ab96d0a9.png",
     "photograph": "0718-19_Color_png.rf.eb19f702298ab96d0a9d41404cbe4ed0.jpg",
     "scores": {
       "classical": {
@@ -134,11 +134,11 @@
         "position_accuracy": 0.08571428571428572
       },
       "siamese_cnn": {
-        "neighbour_accuracy": 0.2413793103448276,
-        "position_accuracy": 0.08571428571428572
+        "neighbour_accuracy": 0.3103448275862069,
+        "position_accuracy": 0.2571428571428571
       },
       "graph_nn": {
-        "neighbour_accuracy": 0.15517241379310345,
+        "neighbour_accuracy": 0.20689655172413793,
         "position_accuracy": 0.08571428571428572
       }
     }
